@@ -106,17 +106,8 @@ def process_vendor_application(application_id):
         application.status = status
         application.updated_at = datetime.utcnow()
         
-        # If approved, create a vendor account
+        # If approved, create a vendor account and update user role
         if status == "approved":
-            # Check if the user exists
-            user = None
-            if application.username:
-                user = User.query.filter_by(username=application.username).first()
-            
-            # If no associated user or user not found, use email to find or create user
-            if not user:
-                user = User.query.filter_by(email=application.email).first()
-            
             # Create vendor record
             vendor = Vendor(
                 name=application.name,
@@ -127,8 +118,13 @@ def process_vendor_application(application_id):
             
             db.session.add(vendor)
             
-            # TODO: Update user role to vendor
-            # TODO: Send approval email
+            # Update user role to vendor if username exists
+            if application.username:
+                user = User.query.filter_by(username=application.username).first()
+                if user:
+                    user.role = "vendor"
+            
+            # TODO: Send approval email notification
         
         db.session.commit()
         

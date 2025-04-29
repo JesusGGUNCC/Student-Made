@@ -1,125 +1,178 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
+import { API_URLS } from '../common/urls';
 
 const CartContext = createContext();
 
-// TODO: Move to API service file (src/services/api.js)
-// const API_BASE_URL = 'your-api-base-url';
-// const fetchCartItems = async () => {
-//   const response = await fetch(`${API_BASE_URL}/cart`);
-//   return response.json();
-// };
-
-// TODO: These mock data will be removed when connecting to backend
-const initialCartItems = [
-  { 
-    id: 1, 
-    name: "Classic Black T-Shirt", 
-    description: "100% Cotton Casual Tee",
-    size: "L",
-    price: 29.99, 
-    quantity: 1, 
-    image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8dCUyMHNoaXJ0fGVufDB8fDB8fHww"
-  },
-  { 
-    id: 2, 
-    name: "Denim Jacket", 
-    description: "Vintage Style Denim",
-    size: "M",
-    price: 89.99, 
-    quantity: 1, 
-    image: "https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8amFja2V0fGVufDB8fDB8fHww"
-  },
-  {
-    id: 3,
-    name: "Running Shoes",
-    description: "Lightweight Performance Sneakers",
-    size: "US 10",
-    price: 119.99,
-    quantity: 1,
-    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c2hvZXN8ZW58MHx8MHx8fDA%3D"
-  }
-];
-
 export function CartProvider({ children }) {
-  const [cartItems, setCartItems] = useState(initialCartItems);
+  const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Load cart from localStorage on initial render
+  useEffect(() => {
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      try {
+        setCartItems(JSON.parse(savedCart));
+      } catch (e) {
+        console.error('Error parsing saved cart:', e);
+      }
+    }
+  }, []);
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cartItems));
+  }, [cartItems]);
+
+  // Calculate total number of items in cart
   const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  // TODO: Implement these API calls when backend is ready
-  const cartActions = {
-    // Fetch cart items from backend
-    fetchItems: async () => {
-      try {
-        setLoading(true);
-        // const data = await fetchCartItems();
-        // setCartItems(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    },
+  // Calculate cart subtotal
+  const cartSubtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
 
-    // Add item to cart
-    addItem: async (item) => {
-      // TODO: Implement POST request to /api/cart/add
-      // try {
-      //   const response = await fetch(`${API_BASE_URL}/cart/add`, {
-      //     method: 'POST',
-      //     body: JSON.stringify(item)
-      //   });
-      //   const data = await response.json();
-      //   setCartItems(prev => [...prev, data]);
-      // } catch (err) {
-      //   setError(err.message);
-      // }
-    },
-
-    // Update item quantity
-    updateQuantity: async (itemId, quantity) => {
-      // TODO: Implement PUT request to /api/cart/update
-      // try {
-      //   await fetch(`${API_BASE_URL}/cart/${itemId}`, {
-      //     method: 'PUT',
-      //     body: JSON.stringify({ quantity })
-      //   });
-      //   setCartItems(prev => prev.map(item => 
-      //     item.id === itemId ? { ...item, quantity } : item
-      //   ));
-      // } catch (err) {
-      //   setError(err.message);
-      // }
-    },
-
-    // Remove item from cart
-    removeItem: async (itemId) => {
-      // TODO: Implement DELETE request to /api/cart/remove
-      // try {
-      //   await fetch(`${API_BASE_URL}/cart/${itemId}`, {
-      //     method: 'DELETE'
-      //   });
-      //   setCartItems(prev => prev.filter(item => item.id !== itemId));
-      // } catch (err) {
-      //   setError(err.message);
-      // }
+  // Add an item to cart
+  const addToCart = (product, quantity = 1) => {
+    // Check if product has enough stock
+    if (product.stock < quantity) {
+      setError('Not enough inventory available');
+      return false;
     }
+
+    setCartItems(prevItems => {
+      // Check if item already in cart
+      const existingItemIndex = prevItems.findIndex(item => item.id === product.id);
+      
+      if (existingItemIndex !== -1) {
+        // Item exists, update quantity if enough stock available
+        const newQuantity = prevItems[existingItemIndex].quantity + quantity;
+        
+        if (newQuantity > product.stock) {
+          setError('Not enough inventory available');
+          return prevItems;
+        }
+        
+        const updatedItems = [...prevItems];
+        updatedItems[existingItemIndex] = {
+          ...updatedItems[existingItemIndex],
+          quantity: newQuantity
+        };
+        return updatedItems;
+      } else {
+        // Add new item
+        return [...prevItems, {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image_url || product.image,
+          quantity,
+          stock: product.stock,
+          description: product.description || ''
+        }];
+      }
+    });
+    
+    return true;
   };
 
-  // TODO: Fetch cart items when component mounts
-  // useEffect(() => {
-  //   cartActions.fetchItems();
-  // }, []);
+  // Update item quantity in cart
+  const updateCartItemQuantity = (productId, quantity) => {
+    if (quantity < 1) return;
+    
+    setCartItems(prevItems => {
+      return prevItems.map(item => {
+        if (item.id === productId) {
+          // Check if quantity is valid
+          if (quantity > item.stock) {
+            setError('Not enough inventory available');
+            return item;
+          }
+          return { ...item, quantity };
+        }
+        return item;
+      });
+    });
+  };
+
+  // Remove item from cart
+  const removeFromCart = (productId) => {
+    setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
+  };
+
+  // Clear cart
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
+  // Verify cart items are in stock before checkout
+  const verifyCartInventory = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const productIds = cartItems.map(item => item.id);
+      
+      // Skip verification if cart is empty
+      if (productIds.length === 0) {
+        return true;
+      }
+      
+      // Fetch latest product details to check stock
+      const response = await axios.post(`${API_URLS.productsList}/verify`, { productIds });
+      const currentProducts = response.data;
+      
+      // Check if any items are out of stock or have insufficient quantity
+      let inventoryValid = true;
+      const updatedCart = cartItems.map(item => {
+        const currentProduct = currentProducts.find(p => p.id === item.id);
+        
+        // If product not found or inactive, mark for removal
+        if (!currentProduct || !currentProduct.active) {
+          inventoryValid = false;
+          return { ...item, invalidReason: 'no_longer_available' };
+        }
+        
+        // If not enough stock, update available stock and mark as invalid
+        if (currentProduct.stock < item.quantity) {
+          inventoryValid = false;
+          return { 
+            ...item, 
+            stock: currentProduct.stock,
+            invalidReason: currentProduct.stock > 0 ? 'insufficient_stock' : 'out_of_stock'
+          };
+        }
+        
+        // Product is valid, update with latest stock
+        return { ...item, stock: currentProduct.stock };
+      });
+      
+      // Update cart with latest stock information
+      setCartItems(updatedCart);
+      
+      return inventoryValid;
+    } catch (err) {
+      console.error('Error verifying cart inventory:', err);
+      setError('Unable to verify product availability. Please try again.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <CartContext.Provider value={{ 
       cartItems, 
       setCartItems, 
       cartItemCount,
+      cartSubtotal,
       loading,
       error,
-      ...cartActions 
+      addToCart,
+      updateCartItemQuantity,
+      removeFromCart,
+      clearCart,
+      verifyCartInventory
     }}>
       {children}
     </CartContext.Provider>
@@ -128,4 +181,4 @@ export function CartProvider({ children }) {
 
 export function useCart() {
   return useContext(CartContext);
-} 
+}
