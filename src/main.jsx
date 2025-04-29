@@ -1,4 +1,4 @@
-// src/main.jsx - Update with admin route
+// src/main.jsx - Update with product detail route
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { 
@@ -22,6 +22,11 @@ import ResetPassword from './routes/ResetPassword.jsx'
 import Product from './routes/Product.jsx'
 import BecomeVendor from './routes/BecomeVendor.jsx'
 import AdminDashboard from './routes/AdminDashboard.jsx'
+import OrderConfirmation from './routes/OrderConfirmation.jsx'
+import UserOrders from './routes/UserOrders.jsx'
+import VendorOrders from './routes/VendorOrders.jsx'
+import OrderDetail from './routes/OrderDetail.jsx'
+import SearchResults from './routes/SearchResults.jsx'
 
 import './index.css'
 
@@ -42,10 +47,17 @@ const router = createBrowserRouter([
       { path: 'vendor-profile', element: <VendorProfile/> },
       { path: 'wishlist', element: <WishList/> },
       { path: 'checkout', element: <Checkout/> },
+      { path: 'product/:productId', element: <Product/> },
       { path: 'product', element: <Product/> },
       { path: 'buyerprofile', element: <BuyerProfile/>},
       { path: 'becomevendor', element: <BecomeVendor/>},
-      { path: 'admin', element: <AdminDashboard/>}, // New admin route
+      { path: 'admin', element: <AdminDashboard/>},
+      { path: 'order-confirmation/:orderId', element: <OrderConfirmation/>},
+      { path: 'my-orders', element: <UserOrders/>},
+      { path: 'vendor/orders', element: <VendorOrders/>},
+      { path: 'order/:orderId', element: <OrderDetail/>},
+      { path: 'search', element: <SearchResults/>},
+      { path: 'vendor/:vendorId', element: <VendorProfile/>},
     ],  
   },
 ]);
