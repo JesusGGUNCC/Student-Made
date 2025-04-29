@@ -12,7 +12,8 @@ def get_all_products():
                 "name": product.name,
                 "price": product.price,
                 "rating": product.rating,
-                "image_url": product.image_url
+                "image_url": product.image_url,
+                "vendor_id": product.vendor_id
             }
             for product in products
         ]
@@ -39,7 +40,8 @@ def get_product_details():
             "name": product.name,
             "price": product.price,
             "rating": product.rating,
-            "image_url": product.image_url
+            "image_url": product.image_url,
+            "vendor_id": product.vendor_id
         }
         return jsonify(product_data), 200
     except Exception as e:
@@ -47,7 +49,7 @@ def get_product_details():
         return jsonify({"error": "Internal server error"}), 500
     
 
-@app.route("/api/product/admin/add-products", methods=["POST"])
+@app.route("/api/product/add-products", methods=["POST"])
 def add_products_bulk():
     try:
         data = request.get_json()
@@ -61,11 +63,12 @@ def add_products_bulk():
             price = item.get("price")
             rating = item.get("rating")
             image_url = item.get("image_url")
+            vendor_id = item.get("vendor_id")
 
             if not name or price is None:
                 return jsonify({"error": "Each product must have at least name and price"}), 400
 
-            new_product = Product(name=name, price=price, rating=rating, image_url=image_url)
+            new_product = Product(name=name, price=price, rating=rating, image_url=image_url, vendor_id=vendor_id)
             products_to_add.append(new_product)
 
         db.session.add_all(products_to_add)
@@ -78,7 +81,7 @@ def add_products_bulk():
         print(f"Error adding products: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-@app.route("/api/product/admin/delete-all-products", methods=["DELETE"])
+@app.route("/api/product/delete-all-products", methods=["DELETE"])
 def delete_all_products():
     try:
         num_deleted = db.session.query(Product).delete()
