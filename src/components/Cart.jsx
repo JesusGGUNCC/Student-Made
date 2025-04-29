@@ -1,31 +1,34 @@
-import React from 'react';
+// src/components/Cart.jsx - Modified
+import React, { useContext } from 'react';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../routes/AuthContent';
 
 function Cart() {
   const { cartItems, setCartItems } = useCart();
+  const { isLoggedIn } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // 增加商品数量
+  // Increase item quantity
   const increaseQuantity = (itemId) => {
     setCartItems(cartItems.map(item => 
       item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item
     ));
   };
 
-  // 减少商品数量
+  // Decrease item quantity
   const decreaseQuantity = (itemId) => {
     setCartItems(cartItems.map(item => 
       item.id === itemId && item.quantity > 1 ? { ...item, quantity: item.quantity - 1 } : item
     ));
   };
 
-  // 添加移除商品的函数
+  // Remove item from cart
   const removeItem = (itemId) => {
     setCartItems(cartItems.filter(item => item.id !== itemId));
   };
 
-  // 计算小计
+  // Calculate subtotal
   const calculateSubtotal = () => {
     return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
@@ -33,6 +36,17 @@ function Cart() {
   const salesTax = calculateSubtotal() * 0.1; // 10% tax rate
   const deliveryFee = 5.99;
   const total = calculateSubtotal() + salesTax + deliveryFee;
+
+  // Handle checkout button click
+  const handleCheckout = () => {
+    if (isLoggedIn) {
+      navigate('/checkout');
+    } else {
+      // Save cart state to localStorage to persist it through login
+      localStorage.setItem('pendingCart', JSON.stringify(cartItems));
+      navigate('/login?redirect=checkout');
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
@@ -92,7 +106,7 @@ function Cart() {
             ))}
           </div>
           
-          {/* 添加空购物车提示 */}
+          {/* Empty cart message */}
           {cartItems.length === 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500 text-lg">Your bag is empty</p>
@@ -122,10 +136,11 @@ function Cart() {
                 <span>${total.toFixed(2)}</span>
               </div>
               <button 
-                onClick={() => navigate('/checkout')}
+                onClick={handleCheckout}
                 className="w-full bg-black text-white py-3 rounded-full mt-6 hover:bg-gray-800 transition-colors"
+                disabled={cartItems.length === 0}
               >
-                Checkout
+                {isLoggedIn ? 'Checkout' : 'Sign in to Checkout'}
               </button>
             </div>
           </div>

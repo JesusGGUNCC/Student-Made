@@ -38,6 +38,7 @@ def signup():
         print(f"Error during signup: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
+# backend/routes/user.py - Update login endpoint
 @app.route("/api/user/login", methods=["POST"])
 def login():
     data = request.json
@@ -48,14 +49,17 @@ def login():
     user = User.query.filter((User.username == username_or_email) |
                                 (User.email == username_or_email)).first()
 
-    if user and bcrypt.checkpw(password.encode('utf-8'), user.password):  # Use hashed password checking in production
-
+    if user and bcrypt.checkpw(password.encode('utf-8'), user.password):
         if remember_me:
             user.remember_token = secrets.token_urlsafe(32)
             user.remember_token_expiry = datetime.utcnow() + timedelta(days=2) 
             db.session.commit()
 
-            response = jsonify({"message" : "Login Successful"})
+            response = jsonify({
+                "message": "Login Successful",
+                "username": user.username,
+                "role": user.role
+            })
 
             response.set_cookie(
                 'remember_token',
@@ -64,7 +68,12 @@ def login():
                 httponly=True,
                 secure=True 
             )
-        return jsonify({"message" : "Login Successful"}), 200
+            return response
+        return jsonify({
+            "message": "Login Successful",
+            "username": user.username,
+            "role": user.role
+        }), 200
     else:
         return jsonify({"error": "Invalid username/email or password"}), 401
 

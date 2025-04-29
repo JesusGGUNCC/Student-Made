@@ -1,67 +1,84 @@
-import React, { useState } from "react";
+// src/routes/SignUp.jsx - Modified with redirect handling
+import React, { useState, useContext } from "react";
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { API_URLS } from "../common/urls";
-
-
+import { AuthContext } from "./AuthContent";
+import { useCart } from "../context/CartContext";
 
 const SignUp = () => {
-    const [username, setUsername] = useState("")
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [error, setError] = useState("")
-    const [passwordError, setPasswordError] = useState("")
-    const [confirmPassword, setConfirmPassword] = useState("")
-    const [showPassword, setShowPassword] = useState(false)
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [passwordError, setPasswordError] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
-    const navigate = useNavigate()
+    const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { login } = useContext(AuthContext);
+    const { setCartItems } = useCart();
+    
+    // Get redirect path from URL query parameters
+    const queryParams = new URLSearchParams(location.search);
+    const redirectTo = queryParams.get("redirect") || "/";
 
     const validateEmail = (email) => {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        setError("")//Clearing previous error
-        setPasswordError("")//clearing password errors
-        setSuccessMessage("")//clearing success message 
+        setError(""); //Clearing previous error
+        setPasswordError(""); //clearing password errors
+        setSuccessMessage(""); //clearing success message 
+        setIsLoading(true);
 
         if (!validateEmail(email)){
-          setError("Please enter a valid email address!")
+          setError("Please enter a valid email address!");
+          setIsLoading(false);
           return;
         }
 
         if (password !== confirmPassword){
-          setPasswordError("Password do not match");
+          setPasswordError("Passwords do not match");
+          setIsLoading(false);
           return;
         }
 
         try{
-            const response = await axios.post(API_URLS.signup,{
+            const response = await axios.post(API_URLS.signup, {
                 username, email, password
             });
+            
             if (response.data.message === "Signup Successful"){
-              setSuccessMessage("Signup Sucessful!")
-              //alert("Signup Successful")
-              //clearing the form after signup 
-              setUsername("")
-              setEmail("")
-              setPassword("")
-              setConfirmPassword("")
+              setSuccessMessage("Signup Successful! Logging you in...");
+              
+              // Auto-login after signup
+              login(username);
+              
+              // Check for pending cart in localStorage
+              const pendingCart = localStorage.getItem('pendingCart');
+              if (pendingCart) {
+                setCartItems(JSON.parse(pendingCart));
+                localStorage.removeItem('pendingCart');
+              }
 
+              // Redirect after signup
               setTimeout(() => {
-                navigate('/login');
-
-              }, 2000);
+                navigate(redirectTo === 'checkout' ? '/checkout' : `/${redirectTo}`);
+              }, 1500);
             }
 
         } catch (err) {
             setError(err.response?.data?.error || "An error occurred");
-
+            setIsLoading(false);
         }
     };
+    
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="bg-white p-8 shadow-md rounded-md w-96">
@@ -73,15 +90,17 @@ const SignUp = () => {
         <h2 className="text-lg font-bold text-center mb-4">Create Account</h2>
         <p className="text-gray-600 text-center mb-4">Please enter your details</p>
 
-        <form onSubmit = {handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Username</label>
             <input
               type="text"
-              value = {username}
-              onChange = {(e) => setUsername(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-700"
               placeholder="Enter a username"
+              disabled={isLoading}
+              required
             />
           </div>
 
@@ -89,68 +108,76 @@ const SignUp = () => {
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
               type="email"
-              value = {email}
-              onChange = {(e) => setEmail(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-700"
               placeholder="Enter your email"
+              disabled={isLoading}
+              required
             />
           </div>
 
-          <div className = "relative">
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
               type={showPassword ? "text" : "password"}
-              value = {password}
-              onChange = {(e) => setPassword(e.target.value)}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-700"
               placeholder="Create a password"
+              disabled={isLoading}
+              required
             />
             <button
-            type = "button"
-            className = "absolute right-3 top-8 text-gray-500"
-            onClick = {() => setShowPassword(!showPassword)}
+              type="button"
+              className="absolute right-3 top-8 text-gray-500"
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
             >
               {showPassword ? "👁️" : "👁️‍🗨️"}
             </button>
           </div>
 
-          <div className = "relative">
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
             <input
-            type={showPassword ? "text" : "password"}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-700"
-            placeholder="Confirm your password"
+              type={showPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-700"
+              placeholder="Confirm your password"
+              disabled={isLoading}
+              required
             />
             <button
-            type = "button"
-            className = "absolute right-3 top-8 text-gray-500"
-            onClick = {() => setShowPassword(!showPassword)}
+              type="button"
+              className="absolute right-3 top-8 text-gray-500"
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
             >
               {showPassword ? "👁️" : "👁️‍🗨️"}
             </button>
           </div>
 
           {successMessage && (
-            <p className = "text-green-500 text-sm">{successMessage}</p>
+            <p className="text-green-500 text-sm">{successMessage}</p>
           )}
 
-
-          {error && <p className = "text-red-500 text-sm">{error}</p>}
-          {passwordError && <p className = "text-red-500 text-sm"> {passwordError}</p>}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
 
           <button
             type="submit"
-            className="w-full bg-green-800 text-white py-2 rounded-md hover:bg-green-900 transition"
+            className={`w-full bg-green-800 text-white py-2 rounded-md hover:bg-green-900 transition ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            disabled={isLoading}
           >
-            Sign up
+            {isLoading ? 'Signing up...' : 'Sign up'}
           </button>
 
-          <p className ="text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-gray-600">
             Already have an account?{" "}
-            <Link to="/login" className = "text-green-700 hover:underline">
-                Log in
+            <Link to={`/login${location.search}`} className="text-green-700 hover:underline">
+              Log in
             </Link>
           </p>
         </form>
