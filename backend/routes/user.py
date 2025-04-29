@@ -50,31 +50,16 @@ def login():
     data = request.json
     username_or_email = data.get("username")
     password = data.get("password")
-    remember_me = data.get("remember_me", False)
+    requested_role = data.get("role", "customer")  # Default to customer
 
     user = User.query.filter((User.username == username_or_email) |
-                                (User.email == username_or_email)).first()
+                             (User.email == username_or_email)).first()
 
     if user and bcrypt.checkpw(password.encode('utf-8'), user.password):
-        if remember_me:
-            user.remember_token = secrets.token_urlsafe(32)
-            user.remember_token_expiry = datetime.utcnow() + timedelta(days=2) 
-            db.session.commit()
+        # Check if user has the requested role
+        if requested_role != "customer" and user.role != requested_role:
+            return jsonify({"error": f"This account does not have {requested_role} privileges"}), 403
 
-            response = jsonify({
-                "message": "Login Successful",
-                "username": user.username,
-                "role": user.role
-            })
-
-            response.set_cookie(
-                'remember_token',
-                user.remember_token,
-                expires=datetime.utcnow() + timedelta(days=2),
-                httponly=True,
-                secure=True 
-            )
-            return response
         return jsonify({
             "message": "Login Successful",
             "username": user.username,

@@ -14,12 +14,22 @@ function Footer() {
                     <div className='mb-4 sm:mb-0 sm:mx-4 md:mx-6 lg:mx-10'>
                         <p className='text-xl md:text-2xl font-bold text-center sm:text-left'>Explore</p>
                         <div className='text-base md:text-lg mt-2 space-y-1 text-center sm:text-left'>
+                            <Link to="/shop-all" className="hover:underline block">Shop All</Link>
                             <p>Custom Orders</p>
-                            <Link to="BecomeVendor" className="hover:underline block">Become a Vendor</Link>
+                            <Link to="/becomevendor" className="hover:underline block">Become a Vendor</Link>
                         </div>
                     </div>
 
-                    {/* Second Section - Contact Us */}
+                    {/* Second Section - Portals */}
+                    <div className='mb-4 sm:mb-0 sm:mx-4 md:mx-6 lg:mx-10'>
+                        <p className='text-xl md:text-2xl font-bold text-center sm:text-left'>Portals</p>
+                        <div className='text-base md:text-lg mt-2 space-y-1 text-center sm:text-left'>
+                            <Link to="/vendor/portal" className="hover:underline block">Vendor Portal</Link>
+                            <Link to="/admin/portal" className="hover:underline block">Admin Portal</Link>
+                        </div>
+                    </div>
+
+                    {/* Third Section - Contact Us */}
                     <div className='text-center sm:text-left'>
                         <p className='text-xl md:text-2xl font-bold'>Contact Us</p>
                         <div className='text-base md:text-lg mt-2 space-y-1'>
@@ -31,6 +41,11 @@ function Footer() {
                             </p>
                         </div>
                     </div>
+                </div>
+                
+                {/* Copyright Section */}
+                <div className="text-center mt-6 text-sm text-gray-600">
+                    <p>© {new Date().getFullYear()} Niner Mine. All rights reserved.</p>
                 </div>
             </div>
         </div>

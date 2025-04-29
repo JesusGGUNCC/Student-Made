@@ -1,34 +1,27 @@
-// src/routes/LoginPage.jsx - Modified
-import React, { useContext, useState, useEffect } from "react";
+// src/routes/CustomerLogin.jsx
+import React, { useState, useContext } from "react";
 import axios from "axios";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from "./AuthContent";
-import { useCart } from "../context/CartContext";
 import { API_URLS } from "../common/urls";
+import { useCart } from "../context/CartContext";
 
-const LoginPage = () => {
+function CustomerLogin() {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useContext(AuthContext);
   const { setCartItems } = useCart();
-  const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   // Get redirect path from URL query parameters
   const queryParams = new URLSearchParams(location.search);
   const redirectTo = queryParams.get("redirect") || "/";
-
-  useEffect(() => {
-    const rememberUser = localStorage.getItem("rememberUser")
-    if (rememberUser) {
-      setUsernameOrEmail(rememberUser)
-      setRememberMe(true)
-    }
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,11 +32,12 @@ const LoginPage = () => {
       const response = await axios.post(API_URLS.login, {
         username: usernameOrEmail,
         password,
-        remember_me: rememberMe
+        remember_me: rememberMe,
+        role: "customer" // Specify customer role
       });
       
       if (response.data.message === "Login Successful") {
-        login(usernameOrEmail);
+        login(usernameOrEmail, "customer");
 
         if (rememberMe) {
           localStorage.setItem("rememberUser", usernameOrEmail);
@@ -77,7 +71,7 @@ const LoginPage = () => {
           <h1 className="text-xl font-semibold text-green-900">Niner Mine</h1>
         </div>
 
-        <h2 className="text-lg font-bold text-center mb-4">Sign In</h2>
+        <h2 className="text-lg font-bold text-center mb-4">Customer Sign In</h2>
         <p className="text-gray-600 text-center mb-6">Please enter your details</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -149,6 +143,6 @@ const LoginPage = () => {
       </div>
     </div>
   );
-};
+}
 
-export default LoginPage;
+export default CustomerLogin;

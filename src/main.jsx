@@ -1,4 +1,4 @@
-// src/main.jsx - Update with product detail route
+// src/main.jsx
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { 
@@ -11,7 +11,11 @@ import Home from './routes/Home.jsx'
 import Products from './routes/Products.jsx'
 import Cart from './routes/Cart.jsx'
 import About from './routes/About.jsx'
-import LoginPage from './routes/LoginPage.jsx'
+import CustomerLogin from './routes/CustomerLogin.jsx'
+import AdminLogin from './routes/AdminLogin.jsx'
+import VendorLogin from './routes/VendorLogin.jsx'
+import AdminPortal from './routes/AdminPortal.jsx'
+import VendorPortal from './routes/VendorPortal.jsx'
 import BuyerProfile from './routes/BuyerProfile.jsx'
 import VendorProfile from './routes/VendorProfile.jsx'
 import WishList from './routes/Wishlist.jsx'
@@ -38,26 +42,38 @@ const router = createBrowserRouter([
       { index: true, element: <Home/> },
       { path: 'shop-all', element: <Products/> },
       { path: 'cart', element: <Cart/> },
-      { path: 'login', element: <LoginPage/> },
+      
+      // Customer login/auth routes
+      { path: 'login', element: <CustomerLogin/> },
       { path: 'signup', element: <SignUp/> },
-      { path: 'about', element: <About/> },
       { path: 'forgotPassword', element: <ForgotPassword/>},
       { path: 'resetPassword', element: <ResetPassword/>},
-      { path: 'buyer-profile', element: <BuyerProfile/>},
+      
+      // Admin routes
+      { path: 'admin/portal', element: <AdminPortal/> },
+      { path: 'admin/login', element: <AdminLogin/> },
+      { path: 'admin', element: <AdminDashboard/>},
+      
+      // Vendor routes
+      { path: 'vendor/portal', element: <VendorPortal/> },
+      { path: 'vendor/login', element: <VendorLogin/> },
       { path: 'vendor-profile', element: <VendorProfile/> },
+      { path: 'vendor/orders', element: <VendorOrders/>},
+      { path: 'vendor/:vendorId', element: <VendorProfile/>},
+      
+      // General routes
+      { path: 'about', element: <About/> },
+      { path: 'buyer-profile', element: <BuyerProfile/>},
+      { path: 'buyerprofile', element: <BuyerProfile/>},
       { path: 'wishlist', element: <WishList/> },
       { path: 'checkout', element: <Checkout/> },
       { path: 'product/:productId', element: <Product/> },
       { path: 'product', element: <Product/> },
-      { path: 'buyerprofile', element: <BuyerProfile/>},
       { path: 'becomevendor', element: <BecomeVendor/>},
-      { path: 'admin', element: <AdminDashboard/>},
       { path: 'order-confirmation/:orderId', element: <OrderConfirmation/>},
       { path: 'my-orders', element: <UserOrders/>},
-      { path: 'vendor/orders', element: <VendorOrders/>},
       { path: 'order/:orderId', element: <OrderDetail/>},
       { path: 'search', element: <SearchResults/>},
-      { path: 'vendor/:vendorId', element: <VendorProfile/>},
     ],  
   },
 ]);
