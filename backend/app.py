@@ -20,7 +20,7 @@ app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')  # Use same key for JWT
 # Initialize extensions
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
-CORS(app, origins=["http://localhost:5173"])
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # ✅ Import all models here
 from models.user import User

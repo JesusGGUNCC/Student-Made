@@ -5,25 +5,28 @@ from datetime import datetime, timedelta
 import secrets
 import bcrypt
 
-@app.route("/api/user/signup", methods = ["POST"])
+@app.route("/api/user/signup", methods=["POST"])
 def signup():
     try: 
         data = request.get_json()
-        print(f"Recieved signup data: {data}")#for debugging use
+        print(f"Received signup data: {data}")  # for debugging use
         if not data:
-            return jsonify({"error": "No data recieved "}), 400
+            return jsonify({"error": "No data received"}), 400
         
         username = data.get("username")
         email = data.get("email")
         password = data.get("password")
 
         if not username or not email or not password:
-            return jsonify({"error" : "Missing required fields"}), 400
+            return jsonify({"error": "Missing required fields"}), 400
         
-
+        # Check if user already exists
         if User.query.filter_by(email=email).first():
-            return jsonify({"error" : "Email already exists"}), 400
+            return jsonify({"error": "Email already exists"}), 400
         
+        if User.query.filter_by(username=username).first():
+            return jsonify({"error": "Username already exists"}), 400
+
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
         new_user = User(username=username, email=email, password=hashed_password)
@@ -31,12 +34,15 @@ def signup():
         db.session.add(new_user)
         db.session.commit()
 
-        return jsonify({"message": "Signup Successful", "username" : username}), 201
+        return jsonify({"message": "Signup Successful", "username": username}), 201
     
     except Exception as e:
         db.session.rollback()
         print(f"Error during signup: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
+        # Add more detailed error logging
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
 # backend/routes/user.py - Update login endpoint
 @app.route("/api/user/login", methods=["POST"])

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 
@@ -17,8 +18,6 @@ function Wishlist() {
     } else {
       setCartItems([...cartItems, { ...item, quantity: 1 }]);
     }
-    // 可选：添加到购物车后从愿望清单中移除
-    // removeFromWishlist(item.id);
   };
 
   return (
@@ -27,7 +26,10 @@ function Wishlist() {
 
       {wishlistItems.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">Your wishlist is empty</p>
+          <p className="text-gray-500 text-lg mb-4">Your wishlist is empty</p>
+          <Link to="/shop-all" className="text-green-700 hover:text-green-900 font-medium">
+            Explore Products
+          </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -51,11 +53,22 @@ function Wishlist() {
 
               <h3 className="font-medium text-lg mb-2">{item.name}</h3>
               <p className="text-gray-600 text-sm mb-2">{item.description}</p>
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-gray-500 text-sm">
-                  {item.color} · Size {item.size}
-                </p>
-                <p className="font-medium">${item.price.toFixed(2)}</p>
+              <div className="flex items-center justify-between mt-4">
+                <p className="font-medium">${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}</p>
+                <div className="flex gap-2">
+                  <Link 
+                    to={`/product/${item.id}`}
+                    className="text-green-700 hover:text-green-900"
+                  >
+                    View Details
+                  </Link>
+                  <button 
+                    onClick={() => addToCart(item)}
+                    className="px-3 py-1 bg-green-700 text-white text-sm rounded hover:bg-green-800"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -65,4 +78,4 @@ function Wishlist() {
   );
 }
 
-export default Wishlist; 
+export default Wishlist;

@@ -5,15 +5,29 @@ import { useWishlist } from '../context/WishlistContext';
 
 function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock = 10, prodDescription = "" }) {
     const { cartItems, setCartItems } = useCart();
-    const { wishlistItems, addToWishlist } = useWishlist();
-    
+    const { wishlistItems, toggleWishlistItem } = useWishlist();
+
     // Check if product is in cart
     const isInCart = cartItems.some(item => item.id === id);
-    
+
     // Check if product is in wishlist
     const isInWishlist = wishlistItems.some(item => item.id === id);
-    
-    // Function to add item to cart
+
+    // Function to handle wishlist toggle
+    const handleWishlistToggle = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        toggleWishlistItem({
+            id,
+            name: prodName,
+            price: prodPrice,
+            image: prodImg,
+            stock: prodStock,
+            description: prodDescription
+        });
+    };
+
     const handleAddToCart = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -25,37 +39,37 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
         const existingItem = cartItems.find(item => item.id === id);
         
         if (existingItem) {
-            // Increase quantity up to available stock
-            if (existingItem.quantity < prodStock) {
-                setCartItems(cartItems.map(item => 
-                    item.id === id 
-                        ? { ...item, quantity: item.quantity + 1 } 
-                        : item
-                ));
-            }
+          // Increase quantity up to available stock
+          if (existingItem.quantity < prodStock) {
+            setCartItems(cartItems.map(item => 
+              item.id === id 
+                ? { ...item, quantity: item.quantity + 1 } 
+                : item
+            ));
+          }
         } else {
-            // Add new item to cart
-            setCartItems([...cartItems, { 
-                id, 
-                name: prodName, 
-                price: prodPrice,
-                image: prodImg,
-                quantity: 1,
-                stock: prodStock,
-                description: prodDescription
-            }]);
+          // Add new item to cart
+          setCartItems([...cartItems, { 
+            id, 
+            name: prodName, 
+            price: prodPrice,
+            image: prodImg,
+            quantity: 1,
+            stock: prodStock,
+            description: prodDescription
+          }]);
         }
-    };
-    
+      };
+
     // Function to add item to wishlist
     const handleAddToWishlist = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        
+
         if (!isInWishlist) {
-            addToWishlist({ 
-                id, 
-                name: prodName, 
+            addToWishlist({
+                id,
+                name: prodName,
                 price: prodPrice,
                 image: prodImg,
                 stock: prodStock,
@@ -68,25 +82,17 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
         <Link to={`/product/${id}`} className="block">
             <div className='flex flex-col w-full h-full rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300'>
                 <div className="relative">
-                    <img 
-                        src={prodImg} 
-                        alt={prodName} 
+                    <img
+                        src={prodImg}
+                        alt={prodName}
                         className='w-full h-64 object-cover rounded-t-2xl'
                     />
-                    
-                    {/* Sold out badge */}
-                    {prodStock <= 0 && (
-                        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                            SOLD OUT
-                        </div>
-                    )}
-                    
+
                     {/* Wishlist button */}
-                    <button 
-                        onClick={handleAddToWishlist}
-                        className={`absolute top-2 left-2 p-2 rounded-full ${
-                            isInWishlist ? 'bg-red-100 text-red-500' : 'bg-white text-gray-400 hover:text-red-500'
-                        }`}
+                    <button
+                        onClick={handleWishlistToggle}
+                        className={`absolute top-2 left-2 p-2 rounded-full ${isInWishlist ? 'bg-red-100 text-red-500' : 'bg-white text-gray-400 hover:text-red-500'
+                            }`}
                         aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill={isInWishlist ? "currentColor" : "none"} stroke="currentColor" strokeWidth={isInWishlist ? "0" : "2"}>
@@ -99,27 +105,27 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                     <h3 className='text-lg font-semibold line-clamp-2 mb-1'>
                         {prodName}
                     </h3>
-                    
+
                     {prodDescription && (
                         <p className="text-gray-600 text-sm mb-2 line-clamp-2">
                             {prodDescription}
                         </p>
                     )}
-                    
+
                     <div className="flex items-center justify-between mt-auto">
                         <div>
                             <p className='font-semibold text-green-600 text-lg'>
                                 ${prodPrice ? prodPrice.toFixed(2) : '0.00'}
                             </p>
-                            
+
                             {prodRating && (
                                 <div className="flex items-center">
                                     <div className="flex text-yellow-400">
                                         {[...Array(5)].map((_, i) => (
-                                            <svg 
+                                            <svg
                                                 key={i}
-                                                xmlns="http://www.w3.org/2000/svg" 
-                                                viewBox="0 0 20 20" 
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 20 20"
                                                 fill={i < Math.floor(prodRating) ? "currentColor" : "none"}
                                                 stroke="currentColor"
                                                 className="h-4 w-4"
@@ -134,22 +140,21 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                                 </div>
                             )}
                         </div>
-                        
+
                         <button
                             onClick={handleAddToCart}
                             disabled={prodStock <= 0 || isInCart}
-                            className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                prodStock <= 0 
-                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${prodStock <= 0
+                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                     : isInCart
                                         ? 'bg-green-100 text-green-800'
                                         : 'bg-green-500 text-white hover:bg-green-600'
-                            }`}
+                                }`}
                         >
-                            {prodStock <= 0 
-                                ? 'Sold Out' 
-                                : isInCart 
-                                    ? 'In Cart' 
+                            {prodStock <= 0
+                                ? 'Sold Out'
+                                : isInCart
+                                    ? 'In Cart'
                                     : 'Add to Cart'
                             }
                         </button>
