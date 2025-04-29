@@ -1,9 +1,10 @@
 from app import app, db
 from models.user import User
-from flask import request, jsonify, session
+from models.vendor_application import VendorApplication  
+import bcrypt
+from flask import request, jsonify
 from datetime import datetime, timedelta
 import secrets
-import bcrypt
 
 @app.route("/api/user/signup", methods=["POST"])
 def signup():
@@ -56,9 +57,20 @@ def login():
                              (User.email == username_or_email)).first()
 
     if user and bcrypt.checkpw(password.encode('utf-8'), user.password):
-        # Check if user has the requested role
-        if requested_role != "customer" and user.role != requested_role:
+        # If user requests vendor access but isn't a vendor, check the vendor applications
+        if requested_role == "vendor" and user.role != "vendor" and user.role != "admin":
             return jsonify({"error": f"This account does not have {requested_role} privileges"}), 403
+            
+        # Allow admin users to access vendor functionality
+        if requested_role == "vendor" and user.role == "admin":
+            # Check if admin has an approved vendor application
+            vendor_application = VendorApplication.query.filter_by(
+                username=user.username,
+                status="approved"
+            ).first()
+            
+            if not vendor_application:
+                return jsonify({"error": "Admin account does not have vendor privileges"}), 403
 
         return jsonify({
             "message": "Login Successful",
@@ -120,8 +132,8 @@ def validate_reset_token():
     
     return jsonify({"valid": True}), 200
 
-@app.route("/api/user/check_remembered", methods=["GET"])
-def check_rememberd():
+@app.route("/api/user/check-remembered", methods=["GET"])
+def check_remembered():
     remember_token = request.cookies.get("remember_token")
 
     if not remember_token:

@@ -1,4 +1,4 @@
-// src/routes/BecomeVendor.jsx - Enhanced version
+// src/routes/BecomeVendor.jsx - Modified to include password fields
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -16,7 +16,9 @@ const BecomeVendor = () => {
   const [companyName, setCompanyName] = useState("");
   const [description, setDescription] = useState("");
   const [productType, setProductType] = useState([]);
-  const [applicationStatus, setApplicationStatus] = useState("notSubmitted"); // notSubmitted, pending, approved, rejected
+  const [password, setPassword] = useState(""); // New password field
+  const [confirmPassword, setConfirmPassword] = useState(""); // New confirm password field
+  const [applicationStatus, setApplicationStatus] = useState("notSubmitted");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -49,12 +51,30 @@ const BecomeVendor = () => {
       return;
     }
     
+    // If not logged in, require and validate password
+    if (!isLoggedIn) {
+      if (!password) {
+        setError("Password is required to create a vendor account");
+        return;
+      }
+      
+      if (password.length < 8) {
+        setError("Password must be at least 8 characters long");
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        setError("Passwords do not match");
+        return;
+      }
+    }
+    
     setIsLoading(true);
     setError("");
     
     try {
-      // We'll create a new endpoint for vendor applications
-      const response = await axios.post(`${API_URLS.vendorApplication}`, {
+      // Create application data
+      const applicationData = {
         name,
         email,
         phone,
@@ -62,7 +82,15 @@ const BecomeVendor = () => {
         description,
         product_types: productType,
         username: isLoggedIn ? user.username : null
-      });
+      };
+      
+      // Add password if not logged in
+      if (!isLoggedIn && password) {
+        applicationData.password = password;
+      }
+      
+      // Submit the application
+      const response = await axios.post(API_URLS.vendorApplication, applicationData);
       
       if (response.status === 201) {
         setApplicationStatus("pending");
@@ -74,6 +102,8 @@ const BecomeVendor = () => {
         setCompanyName("");
         setDescription("");
         setProductType([]);
+        setPassword("");
+        setConfirmPassword("");
       }
     } catch (error) {
       console.error("Error submitting vendor application:", error);
@@ -172,6 +202,40 @@ const BecomeVendor = () => {
             />
           </div>
         </div>
+        
+        {/* Password fields - only show if user is not logged in */}
+        {!isLoggedIn && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 focus:outline-none"
+                placeholder="Create a password for your vendor account"
+                required={!isLoggedIn}
+              />
+              <p className="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Confirm Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 focus:outline-none"
+                placeholder="Confirm your password"
+                required={!isLoggedIn}
+              />
+            </div>
+          </div>
+        )}
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
