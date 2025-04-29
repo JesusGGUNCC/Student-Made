@@ -1,16 +1,29 @@
 import React, { useState, useEffect } from 'react'
 
-function ListingsCard({ id, name = "Product Name", price = 99.99, image = "/placeholder.jpg", active = true, onUpdate }) {
+function ListingsCard({ 
+  id, 
+  name = "Product Name", 
+  price = 99.99, 
+  stock = 0,
+  image = "/placeholder.jpg", 
+  active = true, 
+  description = "",
+  category = "",
+  onUpdate,
+  onDelete
+}) {
     // State to track if edit form is visible
     const [editTab, setEditTab] = useState(false);
 
-    // State to track
+    // State to track product data
     const [editProduct, setEditProduct] = useState({
-        //will reflect the current props
         name: name,
         price: price,
         image: image,
-        active: active
+        active: active,
+        stock: stock,
+        description: description,
+        category: category
     });
 
     useEffect(() => {
@@ -18,16 +31,21 @@ function ListingsCard({ id, name = "Product Name", price = 99.99, image = "/plac
             name: name,
             price: price,
             image: image,
-            active: active
+            active: active,
+            stock: stock,
+            description: description,
+            category: category
         });
 
-    }, [name, price, image, active]);
+    }, [name, price, image, active, stock, description, category]);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         setEditProduct({
             ...editProduct,
-            [name]: type === 'checkbox' ? checked : name === 'price' ? parseFloat(value) || '' : value
+            [name]: type === 'checkbox' ? checked : 
+                  (name === 'price' || name === 'stock') ? 
+                  parseFloat(value) || 0 : value
         })
     };
 
@@ -40,6 +58,19 @@ function ListingsCard({ id, name = "Product Name", price = 99.99, image = "/plac
 
         setEditTab(false);
     }
+
+    // Categories for dropdown
+    const productCategories = [
+        "Jewelry", "Accessories", "Prints", "Technology", 
+        "School Spirit", "Crochet", "Art", "Clothing", "Other"
+    ];
+
+    // Handler for delete button
+    const handleDelete = () => {
+        if (window.confirm('Are you sure you want to delete this product?')) {
+            onDelete(id);
+        }
+    };
 
     // Conditional Rendering that shows form to edit changes for the listing component
     if (editTab) {
@@ -62,8 +93,9 @@ function ListingsCard({ id, name = "Product Name", price = 99.99, image = "/plac
 
                 <div className="p-3 sm:p-4">
                     {/* Form to edit changes */}
-                    <form className='space-y-1' onSubmit={handleSubmit}>
+                    <form className='space-y-2' onSubmit={handleSubmit}>
                         <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
                             <input 
                                 type="text"
                                 name='name'
@@ -73,14 +105,69 @@ function ListingsCard({ id, name = "Product Name", price = 99.99, image = "/plac
                                 placeholder="Product Name"/>
                         </div>
 
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                                <input 
+                                    type="number"
+                                    name='price'
+                                    value={editProduct.price}
+                                    onChange={handleInputChange}
+                                    step="0.01"
+                                    min="0"
+                                    className='w-full px-3 py-1 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700'
+                                    placeholder="Price"/>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+                                <input 
+                                    type="number"
+                                    name='stock'
+                                    value={editProduct.stock}
+                                    onChange={handleInputChange}
+                                    min="0"
+                                    className='w-full px-3 py-1 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700'
+                                    placeholder="Quantity"/>
+                            </div>
+                        </div>
+                        
                         <div>
-                            <input 
-                                type="text"
-                                name='price'
-                                value={editProduct.price}
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            <select
+                                name="category"
+                                value={editProduct.category}
                                 onChange={handleInputChange}
                                 className='w-full px-3 py-1 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700'
-                                placeholder="Price"/>
+                            >
+                                <option value="">Select Category</option>
+                                {productCategories.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                            <input 
+                                type="text"
+                                name='image'
+                                value={editProduct.image}
+                                onChange={handleInputChange}
+                                className='w-full px-3 py-1 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700'
+                                placeholder="Image URL"/>
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea 
+                                name='description'
+                                value={editProduct.description}
+                                onChange={handleInputChange}
+                                rows={3}
+                                className='w-full px-3 py-1 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700'
+                                placeholder="Product description"
+                            />
                         </div>
 
                         <div className='flex items-center pl-1'>
@@ -101,24 +188,26 @@ function ListingsCard({ id, name = "Product Name", price = 99.99, image = "/plac
                             <div className='space-x-2'>
                                 <button 
                                     type="submit"
-                                    className="bg-green-600 text-white rounded-md text-base sm:text-lg px-2 py-1 border"
+                                    className="bg-green-600 text-white rounded-md text-base px-3 py-1 border hover:bg-green-700"
                                 >
-                                    Confirm
+                                    Update
                                 </button>
 
                                 <button
                                     type="button"
-                                    className=''
+                                    className='text-gray-600 hover:text-gray-800'
                                     onClick={() => setEditTab(false)}
                                 >
                                     Cancel
                                 </button>
                             </div>
-                            {/* Dynamic active circle */}
-                            <div className="flex items-center">
-                                <span className={`h-3 w-3 rounded-full ${active ? 'bg-green-500' : 'bg-gray-400'} mr-2`}></span>
-                                <span className="text-sm">{active ? 'Active' : 'Inactive'}</span>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={handleDelete}
+                                className="text-red-600 hover:text-red-800"
+                            >
+                                Delete
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -126,11 +215,11 @@ function ListingsCard({ id, name = "Product Name", price = 99.99, image = "/plac
         );
     }
 
-    // Listing Component
+    // Listing Component - When not in edit mode
     return (
         <div className="border rounded-lg overflow-hidden shadow-md w-full sm:max-w-sm lg:max-w-md hover:shadow-lg transition-shadow">
             {/* Place holder for Image */}
-            <div className="h-40 sm:h-48 bg-gray-200">
+            <div className="h-40 sm:h-48 bg-gray-200 relative">
                 {image && (
                     <img 
                         src={image} 
@@ -142,12 +231,45 @@ function ListingsCard({ id, name = "Product Name", price = 99.99, image = "/plac
                         }}
                     />
                 )}
+                
+                {/* Stock badge */}
+                {stock <= 0 && (
+                    <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                        SOLD OUT
+                    </div>
+                )}
+                {stock > 0 && stock <= 5 && (
+                    <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">
+                        LOW STOCK: {stock}
+                    </div>
+                )}
             </div>
 
             <div className="p-3 sm:p-4">
-                <h3 className="font-semibold text-lg sm:text-xl mb-1 sm:mb-2 truncate">{name}</h3>
-                <p className="text-gray-600 mb-2">${typeof price === 'number' ? price.toFixed(2) : price}</p>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-semibold text-lg sm:text-xl mb-1 truncate">{name}</h3>
+                    <span className="text-sm bg-gray-100 text-gray-800 px-2 py-0.5 rounded">
+                        {category}
+                    </span>
+                </div>
+                
+                <p className="text-gray-500 text-sm mb-2 line-clamp-2">{description}</p>
+                
+                <div className="flex justify-between items-center">
+                    <p className="text-gray-800 font-medium">${typeof price === 'number' ? price.toFixed(2) : price}</p>
+                    
+                    <div className="flex items-center">
+                        <span className="text-sm mr-3">
+                            {stock > 0 ? `In stock: ${stock}` : 'Out of stock'}
+                        </span>
+                        
+                        {/* Status indicator */}
+                        <span className={`h-3 w-3 rounded-full ${active ? 'bg-green-500' : 'bg-gray-400'} mr-2`}></span>
+                        <span className="text-xs">{active ? 'Active' : 'Inactive'}</span>
+                    </div>
+                </div>
+                
+                <div className="flex justify-between mt-3 pt-3 border-t">
                     <button 
                         className="text-blue-600 hover:text-blue-800 transition-colors"
                         onClick={() => setEditTab(true)}
@@ -155,11 +277,12 @@ function ListingsCard({ id, name = "Product Name", price = 99.99, image = "/plac
                         Edit
                     </button>
                     
-                    {/* Dynamic active circle */}
-                    <div className="flex items-center">
-                        <span className={`h-3 w-3 rounded-full ${active ? 'bg-green-500' : 'bg-gray-400'} mr-2`}></span>
-                        <span className="text-sm">{active ? 'Active' : 'Inactive'}</span>
-                    </div>
+                    <button
+                        onClick={handleDelete}
+                        className="text-red-600 hover:text-red-800 transition-colors"
+                    >
+                        Delete
+                    </button>
                 </div>
             </div>
         </div>
