@@ -1,13 +1,20 @@
-// src/routes/Products.jsx - Updated with search functionality
-import React, { useEffect, useState } from 'react';
+// src/routes/SearchResults.jsx
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ProductCard from '../components/ProductCard';
 import SearchFilter from '../components/SearchFilter';
-import { fetchMockProducts } from '../mock-data/product/mockProducts';
 import { API_URLS } from '../common/urls';
 import Utils from '../common/utils';
+import { fetchMockProducts } from '../mock-data/product/mockProducts';
 
-function Products() {
+function SearchResults() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryParams = new URLSearchParams(location.search);
+  const initialSearchTerm = queryParams.get('q') || '';
+  const initialCategory = queryParams.get('category') || '';
+  
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,11 +37,21 @@ function Products() {
         }
         
         setProducts(data);
-        setFilteredProducts(data);
         
         // Extract unique categories
         const uniqueCategories = [...new Set(data.map(product => product.category).filter(Boolean))];
         setCategories(uniqueCategories);
+        
+        // Apply initial filters from URL
+        applyFilters(data, {
+          searchTerm: initialSearchTerm,
+          category: initialCategory,
+          priceRange: { 
+            min: queryParams.get('min_price') || '', 
+            max: queryParams.get('max_price') || '' 
+          },
+          sortBy: queryParams.get('sort') || 'default'
+        });
         
         setError(null);
       } catch (error) {
@@ -46,12 +63,12 @@ function Products() {
     };
 
     fetchProducts();
-  }, []);
+  }, [initialSearchTerm, initialCategory]);
 
-  const handleSearch = (filters) => {
+  const applyFilters = (productsToFilter, filters) => {
     const { searchTerm, category, priceRange, sortBy } = filters;
     
-    let filtered = [...products];
+    let filtered = [...productsToFilter];
     
     // Apply search term filter
     if (searchTerm) {
@@ -99,12 +116,43 @@ function Products() {
     setFilteredProducts(filtered);
   };
 
+  const handleSearch = (filters) => {
+    // Update URL with filter parameters
+    const newParams = new URLSearchParams();
+    if (filters.searchTerm) newParams.set('q', filters.searchTerm);
+    if (filters.category) newParams.set('category', filters.category);
+    if (filters.priceRange.min) newParams.set('min_price', filters.priceRange.min);
+    if (filters.priceRange.max) newParams.set('max_price', filters.priceRange.max);
+    if (filters.sortBy && filters.sortBy !== 'default') newParams.set('sort', filters.sortBy);
+    
+    navigate(`/search?${newParams.toString()}`);
+    
+    // Apply filters to products
+    applyFilters(products, filters);
+  };
+
   return (
     <div className='container mx-auto px-4 py-8'>
-      <h1 className='text-3xl md:text-4xl font-bold text-center mb-6'>Shop All Products</h1>
+      <h1 className='text-3xl md:text-4xl font-bold text-center mb-6'>
+        {initialSearchTerm ? 
+          `Search Results for "${initialSearchTerm}"` : 
+          (initialCategory ? `${initialCategory} Products` : 'All Products')}
+      </h1>
       
       {/* Search and Filter Component */}
-      <SearchFilter onSearch={handleSearch} categories={categories} />
+      <SearchFilter 
+        onSearch={handleSearch} 
+        categories={categories} 
+        initialFilters={{
+          searchTerm: initialSearchTerm,
+          category: initialCategory,
+          priceRange: { 
+            min: queryParams.get('min_price') || '', 
+            max: queryParams.get('max_price') || '' 
+          },
+          sortBy: queryParams.get('sort') || 'default'
+        }}
+      />
       
       {/* Loading State */}
       {loading && (
@@ -125,15 +173,10 @@ function Products() {
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg mb-4">No products found matching your criteria</p>
           <button 
-            onClick={() => handleSearch({
-              searchTerm: '',
-              category: '',
-              priceRange: { min: '', max: '' },
-              sortBy: 'default'
-            })}
+            onClick={() => navigate('/shop-all')}
             className="text-green-600 hover:text-green-800 font-medium"
           >
-            Clear filters and show all products
+            Browse all products
           </button>
         </div>
       )}
@@ -159,11 +202,11 @@ function Products() {
       {/* Product Count */}
       {!loading && filteredProducts.length > 0 && (
         <div className="mt-6 text-gray-500 text-center">
-          Showing {filteredProducts.length} out of {products.length} products
+          Showing {filteredProducts.length} results
         </div>
       )}
     </div>
   );
 }
 
-export default Products;
+export default SearchResults;

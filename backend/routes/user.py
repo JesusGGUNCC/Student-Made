@@ -1,29 +1,33 @@
 from app import app, db
 from models.user import User
-from flask import request, jsonify, session
+from models.vendor_application import VendorApplication  
+import bcrypt
+from flask import request, jsonify
 from datetime import datetime, timedelta
 import secrets
-import bcrypt
 
-@app.route("/api/user/signup", methods = ["POST"])
+@app.route("/api/user/signup", methods=["POST"])
 def signup():
     try: 
         data = request.get_json()
-        print(f"Recieved signup data: {data}")#for debugging use
+        print(f"Received signup data: {data}")  # for debugging use
         if not data:
-            return jsonify({"error": "No data recieved "}), 400
+            return jsonify({"error": "No data received"}), 400
         
         username = data.get("username")
         email = data.get("email")
         password = data.get("password")
 
         if not username or not email or not password:
-            return jsonify({"error" : "Missing required fields"}), 400
+            return jsonify({"error": "Missing required fields"}), 400
         
-
+        # Check if user already exists
         if User.query.filter_by(email=email).first():
-            return jsonify({"error" : "Email already exists"}), 400
+            return jsonify({"error": "Email already exists"}), 400
         
+        if User.query.filter_by(username=username).first():
+            return jsonify({"error": "Username already exists"}), 400
+
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
         new_user = User(username=username, email=email, password=hashed_password)
@@ -31,40 +35,48 @@ def signup():
         db.session.add(new_user)
         db.session.commit()
 
-        return jsonify({"message": "Signup Successful", "username" : username}), 201
+        return jsonify({"message": "Signup Successful", "username": username}), 201
     
     except Exception as e:
         db.session.rollback()
         print(f"Error during signup: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
+        # Add more detailed error logging
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
+# backend/routes/user.py - Update login endpoint
 @app.route("/api/user/login", methods=["POST"])
 def login():
     data = request.json
     username_or_email = data.get("username")
     password = data.get("password")
-    remember_me = data.get("remember_me", False)
+    requested_role = data.get("role", "customer")  # Default to customer
 
     user = User.query.filter((User.username == username_or_email) |
-                                (User.email == username_or_email)).first()
+                             (User.email == username_or_email)).first()
 
-    if user and bcrypt.checkpw(password.encode('utf-8'), user.password):  # Use hashed password checking in production
+    if user and bcrypt.checkpw(password.encode('utf-8'), user.password):
+        # If user requests vendor access but isn't a vendor, check the vendor applications
+        if requested_role == "vendor" and user.role != "vendor" and user.role != "admin":
+            return jsonify({"error": f"This account does not have {requested_role} privileges"}), 403
+            
+        # Allow admin users to access vendor functionality
+        if requested_role == "vendor" and user.role == "admin":
+            # Check if admin has an approved vendor application
+            vendor_application = VendorApplication.query.filter_by(
+                username=user.username,
+                status="approved"
+            ).first()
+            
+            if not vendor_application:
+                return jsonify({"error": "Admin account does not have vendor privileges"}), 403
 
-        if remember_me:
-            user.remember_token = secrets.token_urlsafe(32)
-            user.remember_token_expiry = datetime.utcnow() + timedelta(days=2) 
-            db.session.commit()
-
-            response = jsonify({"message" : "Login Successful"})
-
-            response.set_cookie(
-                'remember_token',
-                user.remember_token,
-                expires=datetime.utcnow() + timedelta(days=2),
-                httponly=True,
-                secure=True 
-            )
-        return jsonify({"message" : "Login Successful"}), 200
+        return jsonify({
+            "message": "Login Successful",
+            "username": user.username,
+            "role": user.role
+        }), 200
     else:
         return jsonify({"error": "Invalid username/email or password"}), 401
 
@@ -120,8 +132,8 @@ def validate_reset_token():
     
     return jsonify({"valid": True}), 200
 
-@app.route("/api/user/check_remembered", methods=["GET"])
-def check_rememberd():
+@app.route("/api/user/check-remembered", methods=["GET"])
+def check_remembered():
     remember_token = request.cookies.get("remember_token")
 
     if not remember_token:
