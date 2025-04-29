@@ -1,3 +1,13 @@
+Visual Studio Code settings: (Optional)
+----------------------------
+File -> Preferences -> Click settings.json icon 
+Add the following:
+"files.exclude": {
+    "**/__pycache__": true,
+    "**/migrations": true,
+    "**/__init__.py": true
+}
+
 Note:
 ----------
 The following steps for frontend install & testing in local machine.
