@@ -1,3 +1,4 @@
+# backend/app.py - Update to include vendor application routes
 from flask import Flask 
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -26,6 +27,7 @@ from models.product import Product
 from models.wishlist import Wishlist
 from models.order import Order
 from models.order_details import OrderDetails
+from models.vendor_application import VendorApplication  # New model
 
 # ✅ Now after all models are loaded, create tables
 with app.app_context():
@@ -38,3 +40,4 @@ from routes.vendor import *
 from routes.product import *
 from routes.wishlist import *
 from routes.order import *
+from routes.vendor_application import *  # New routes

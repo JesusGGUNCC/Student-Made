@@ -1,6 +1,6 @@
+// src/main.jsx - Update with admin route
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import ReactDOM from 'react-dom/client'
 import { 
   createBrowserRouter,
   RouterProvider,
@@ -21,9 +21,9 @@ import ForgotPassword from './routes/ForgotPassword.jsx'
 import ResetPassword from './routes/ResetPassword.jsx'
 import Product from './routes/Product.jsx'
 import BecomeVendor from './routes/BecomeVendor.jsx'
+import AdminDashboard from './routes/AdminDashboard.jsx'
 
 import './index.css'
-
 
 const router = createBrowserRouter([
   {
@@ -45,11 +45,10 @@ const router = createBrowserRouter([
       { path: 'product', element: <Product/> },
       { path: 'buyerprofile', element: <BuyerProfile/>},
       { path: 'becomevendor', element: <BecomeVendor/>},
-      
+      { path: 'admin', element: <AdminDashboard/>}, // New admin route
     ],  
   },
 ]);
-
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

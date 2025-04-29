@@ -258,6 +258,8 @@ function BuyerProfile() {
 		<div className="w-full mb-15 mx-15">
 			<p className="text-4xl font-bold my-15 place-self-center">Profile</p>
 
+      <VendorApplicationStatus />
+
 			{/* Left Side - Forms */}
 			<div className="lg:w-2/3 space-y-8">
 				{/* Delivery Section */}
