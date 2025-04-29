@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { API_URLS } from '../common/urls';
 
 export const AuthContext = createContext();
 
@@ -15,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const checkRememberedSession = async () => {
             try {
-                const response = await axios.get("http://localhost:5000/check-remembered");
+                const response = await axios.get(API_URLS.checkRemembered);
                 if (response.data.remembered) {
                     setIsLoggedIn(true);
                 }

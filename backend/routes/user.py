@@ -1,11 +1,11 @@
 from app import app, db
-from models import User
+from models.user import User
 from flask import request, jsonify, session
 from datetime import datetime, timedelta
 import secrets
 import bcrypt
 
-@app.route("/signup", methods = ["POST"])
+@app.route("/api/user/signup", methods = ["POST"])
 def signup():
     try: 
         data = request.get_json()
@@ -38,7 +38,7 @@ def signup():
         print(f"Error during signup: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-@app.route("/login", methods=["POST"])
+@app.route("/api/user/login", methods=["POST"])
 def login():
     data = request.json
     username_or_email = data.get("username")
@@ -68,7 +68,7 @@ def login():
     else:
         return jsonify({"error": "Invalid username/email or password"}), 401
 
-@app.route('/forgotPassword', methods = ['POST'])
+@app.route('/api/user/forgotPassword', methods = ['POST'])
 def forgot_password():
     email = request.json.get("email")
     if not email:
@@ -88,7 +88,7 @@ def forgot_password():
     
     return jsonify({"message" : "Password Link Sent to your Email"}), 200
 
-@app.route('/resetPassword', methods=['POST'])
+@app.route('/api/user/resetPassword', methods=['POST'])
 def reset_password():
     token = request.json.get('token')
     new_password = request.json.get('password')
@@ -108,7 +108,7 @@ def reset_password():
     
     return jsonify({"message": "Password updated successfully"}), 200
 
-@app.route('/validate-reset-token', methods=['POST'])
+@app.route('/api/user/validate-reset-token', methods=['POST'])
 def validate_reset_token():
     token = request.json.get('token')
     if not token:
@@ -120,7 +120,7 @@ def validate_reset_token():
     
     return jsonify({"valid": True}), 200
 
-@app.route("/check_remembered", methods=["GET"])
+@app.route("/api/user/check_remembered", methods=["GET"])
 def check_rememberd():
     remember_token = request.cookies.get("remember_token")
 

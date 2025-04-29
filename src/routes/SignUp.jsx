@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import { API_URLS } from "../common/urls";
 
 
 
@@ -38,7 +39,7 @@ const SignUp = () => {
         }
 
         try{
-            const response = await axios.post("http://localhost:5000/signup",{
+            const response = await axios.post(API_URLS.signup,{
                 username, email, password
             });
             if (response.data.message === "Signup Successful"){

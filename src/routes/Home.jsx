@@ -2,8 +2,8 @@ import React from 'react'
 import { Link } from 'react-router-dom';
 import useEmblaCarousel from 'embla-carousel-react'
 
-import categoryData from '../data/categories.json';
-import VendorData from '../data/creators.json'
+import categoryData from '../mock-data/home/categories.json';
+import VendorData from '../mock-data/home/creators.json'
 
 import CategoryCard from '../components/CategoryCard'
 import CreatorBubble from '../components/CreatorBubble';

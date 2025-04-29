@@ -2,6 +2,7 @@ import React, {useContext, useState, useEffect} from "react";
 import axios from "axios";
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from "./AuthContent";
+import { API_URLS } from "../common/urls";
 
 const LoginPage = () => {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
@@ -25,7 +26,7 @@ const LoginPage = () => {
     setError("")
 
     try {
-      const response = await axios.post("http://localhost:5000/login", {
+      const response = await axios.post(API_URLS.login, {
         username: usernameOrEmail,
         password,
         remember_me : rememberMe

@@ -12,7 +12,7 @@ const ForgotPassword = () => {
         setMessage(''); //clearing message
         setError(''); //clearing message
         try {
-            const response = await axios.post('http://localhost:5000/forgotPassword', { email });
+            const response = await axios.post(API_URLS.forgotPassword, { email });
             setMessage(response.data.message);
             setError('');
             
