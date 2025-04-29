@@ -24,13 +24,14 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:5000/user/signup",
+							"raw": "http://localhost:5000/api/user/signup",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "5000",
 							"path": [
+								"api",
 								"user",
 								"signup"
 							]
@@ -45,7 +46,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"username\": \"jnana\",\r\n  \"password\": \"mypassword123\"\r\n}\r\n",
+							"raw": "{\r\n  \"username\": \"jnana1\",\r\n  \"password\": \"mypassword123\"\r\n}\r\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -53,13 +54,14 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:5000/user/login",
+							"raw": "http://localhost:5000/api/user/login",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "5000",
 							"path": [
+								"api",
 								"user",
 								"login"
 							]
@@ -82,13 +84,14 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:5000/user/forgotPassword",
+							"raw": "http://localhost:5000/api/user/forgotPassword",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "5000",
 							"path": [
+								"api",
 								"user",
 								"forgotPassword"
 							]
@@ -111,13 +114,14 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:5000/user/resetPassword",
+							"raw": "http://localhost:5000/api/user/resetPassword",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "5000",
 							"path": [
+								"api",
 								"user",
 								"resetPassword"
 							]
@@ -140,13 +144,14 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:5000/user/validate-reset-token",
+							"raw": "http://localhost:5000/api/user/validate-reset-token",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "5000",
 							"path": [
+								"api",
 								"user",
 								"validate-reset-token"
 							]
@@ -159,6 +164,54 @@
 		{
 			"name": "Product",
 			"item": [
+				{
+					"name": "list",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5000/api/product/list",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"product",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5000/api/product/details?productId=19",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"product",
+								"details"
+							],
+							"query": [
+								{
+									"key": "productId",
+									"value": "19"
+								}
+							]
+						}
+					},
+					"response": []
+				},
 				{
 					"name": "admin/add-products",
 					"request": {
@@ -174,62 +227,17 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:5000/product/admin/add-products",
+							"raw": "http://localhost:5000/api/product/admin/add-products",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "5000",
 							"path": [
+								"api",
 								"product",
 								"admin",
 								"add-products"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "list",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:5000/product/list",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "5000",
-							"path": [
-								"product",
-								"list"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "details",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:5000/product/details?productId=1",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "5000",
-							"path": [
-								"product",
-								"details"
-							],
-							"query": [
-								{
-									"key": "productId",
-									"value": "1"
-								}
 							]
 						}
 					},
@@ -241,16 +249,403 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:5000/product/admin/delete-all-products",
+							"raw": "http://localhost:5000/api/product/admin/delete-all-products",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "5000",
 							"path": [
+								"api",
 								"product",
 								"admin",
 								"delete-all-products"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Profile",
+			"item": [
+				{
+					"name": "add",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"jnana1\",\r\n  \"first_name\": \"John\",\r\n  \"last_name\": \"Doe\",\r\n  \"address1\": \"123 Main St\",\r\n  \"address2\": \"Apt 4B\",\r\n  \"country\": \"United States\",\r\n  \"zip_code\": \"28262\",\r\n  \"city\": \"Charlotte\",\r\n  \"state\": \"NC\",\r\n  \"phone_number\": \"1234567890\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/userprofile/add",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"userprofile",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"jnana1\",\r\n  \"address1\": \"456 Elm St\",\r\n  \"phone_number\": \"9876543210\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/userprofile/update",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"userprofile",
+								"update"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5000/api/userprofile/delete?username=jnana1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"userprofile",
+								"delete"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "jnana1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5000/api/userprofile/get?username=jnana1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"userprofile",
+								"get"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "jnana1"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Wishlist",
+			"item": [
+				{
+					"name": "get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5000/api/wishlist/get?username=jnana1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"wishlist",
+								"get"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "jnana1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"jnana1\",\r\n  \"product_ids\": [20, 22]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/wishlist/add",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"wishlist",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5000/api/wishlist/delete?id=2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"wishlist",
+								"delete"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Order",
+			"item": [
+				{
+					"name": "get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5000/api/order/get?username=jnana1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"order",
+								"get"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "jnana1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"jnana1\",\r\n  \"first_name\": \"John\",\r\n  \"last_name\": \"Doe\",\r\n  \"address1\": \"123 Main Street\",\r\n  \"address2\": \"Apt 4B\",\r\n  \"country\": \"USA\",\r\n  \"state\": \"NC\",\r\n  \"city\": \"Charlotte\",\r\n  \"zip_code\": \"28262\",\r\n  \"phone_number\": \"1234567890\",\r\n  \"subtotal_amount\": 150.00,\r\n  \"sales_tax_amount\": 10.50,\r\n  \"shipping_fee\": 5.00,\r\n  \"total_amount\": 165.50,\r\n  \"payment_id\": 1, \r\n  \"products\": [\r\n    {\r\n      \"product_id\": 21,\r\n      \"quantity\": 2,\r\n      \"unit_price\": 50.00\r\n    },\r\n    {\r\n      \"product_id\": 22,\r\n      \"quantity\": 1,\r\n      \"unit_price\": 50.00\r\n    }\r\n  ]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/order/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"order",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5000/api/order/cancel?order_id=1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"order",
+								"cancel"
+							],
+							"query": [
+								{
+									"key": "order_id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payment",
+			"item": [
+				{
+					"name": "get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5000/api/payment/get?payment_id=1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"payment",
+								"get"
+							],
+							"query": [
+								{
+									"key": "payment_id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"jnana1\",\r\n  \"payment_type\": \"Card\",\r\n  \"card_number\": \"4111\",\r\n  \"card_expiry_date\": \"12/2025\",\r\n  \"card_security_code\": \"123\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/payment/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"payment",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5000/api/payment/delete?payment_id=1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"payment",
+								"delete"
+							],
+							"query": [
+								{
+									"key": "payment_id",
+									"value": "1"
+								}
 							]
 						}
 					},
