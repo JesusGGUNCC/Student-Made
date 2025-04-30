@@ -1,0 +1,6 @@
+i-0ad90505c4672d1bf (UNCC E-Commerce EC2)
+
+PublicIPs: 54.235.32.197    PrivateIPs: 172.31.31.44
+
+https://us-east-1.console.aws.amazon.com/ec2-instance-connect/ssh/home?addressFamily=ipv4&connType=standard&instanceId=i-0ad90505c4672d1bf&osUser=ec2-user&region=us-east-1&sshPort=22
+

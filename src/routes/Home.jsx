@@ -114,7 +114,7 @@ function Home() {
             {/* Hero/poster when user first opens the website */}
             <div className="w-full h-[50vh] md:h-[60vh] lg:h-[80vh] relative">
                 <img
-                    src="/public/assets/hero-image.jpg"
+                    src="/assets/hero-image.jpg"
                     alt="Niner Mine Hero"
                     className="w-full h-full object-cover"
                 />

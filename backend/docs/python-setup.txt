@@ -1,0 +1,48 @@
+PYTHON AND PIP:
+----------------
+sudo yum update -y
+sudo yum install -y python3
+sudo yum install -y python3-pip
+
+PYTHON LIBRARY:
+---------------
+pip3 install psycopg2-binary
+
+NGINX:
+-----------
+sudo dnf install -y nginx
+sudo systemctl start nginx
+sudo systemctl enable nginx
+sudo nano /etc/nginx/conf.d/flask.conf
+server {
+    listen 80;
+    server_name 54.235.32.197;
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+sudo nginx -t
+sudo systemctl restart nginx
+
+NODEJS:
+-----------
+curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+sudo yum install -y nodejs
+
+PM2:
+--------
+sudo npm install -g pm2
+pm2 start /home/ec2-user/your-project/run.py --interpreter=python3 --name ecomm-app
+pm2 save
+pm2 status
+pm2 logs ecomm-app
+pm2 stop ecomm-app
+pm2 restart ecomm-app
+pm2 delete ecomm-app
+
+

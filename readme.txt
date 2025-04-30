@@ -37,3 +37,4 @@ STEP 5:
 Test the following URL in the browser: 
 http://localhost:5173/
 http://localhost:5173/products
+http://ec2-54-235-32-197.compute-1.amazonaws.com/

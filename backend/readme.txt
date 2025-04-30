@@ -43,6 +43,8 @@ a) Install Postman
 b) Open Postman
 c) Import Postman collection from postman folder
 e) Test end points from Postman 
-Ex: http://localhost:5000/product/list
-if no products exist, then, try invoke first http://localhost:5000/product/add-products
-and then invoke http://localhost:5000/product/list
+Ex: http://localhost:5000/api/product/list
+or
+http://ec2-54-235-32-197.compute-1.amazonaws.com/api/product/list
+if no products exist, then, try invoke first http://localhost:5000/api/product/add-products
+and then invoke http://localhost:5000/api/product/list
