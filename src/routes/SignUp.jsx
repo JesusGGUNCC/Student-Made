@@ -57,23 +57,15 @@ const SignUp = () => {
             if (response.data.message === "Signup Successful"){
               setSuccessMessage("Signup Successful! Logging you in...");
               
-              // Auto-login after signup
-              login(username);
               
-              // Check for pending cart in localStorage
-              const pendingCart = localStorage.getItem('pendingCart');
-              if (pendingCart) {
-                setCartItems(JSON.parse(pendingCart));
-                localStorage.removeItem('pendingCart');
-              }
-
               // Redirect after signup
               setTimeout(() => {
-                navigate(redirectTo === 'checkout' ? '/checkout' : `/${redirectTo}`);
-              }, 1500);
-            }
+                navigate('/login');
+            }, 1500);
+        }
 
         } catch (err) {
+
             setError(err.response?.data?.error || "An error occurred");
             setIsLoading(false);
         }

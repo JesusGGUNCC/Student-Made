@@ -1,5 +1,5 @@
 # backend/models/user.py - Add role field
-from app import db, app
+from app import db
 import bcrypt
 from datetime import datetime, timedelta
 
@@ -21,6 +21,3 @@ class User(db.Model):
         self.email = email
         self.password = password
         self.role = role
-
-with app.app_context():
-    db.create_all()

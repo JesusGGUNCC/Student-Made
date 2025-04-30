@@ -10,6 +10,8 @@ flask-jwt-extended = "*"
 psycopg2 = "*"
 flask = "*"
 flask-sqlalchemy = "*"
+requests = "*"
+flask-migrate = "*"
 
 [dev-packages]
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { API_URLS } from "../common/urls";
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');

@@ -1,4 +1,4 @@
-from app import db, app
+from app import db
 
 # Database model for PostgreSQL
 class Product(db.Model):
@@ -29,6 +29,3 @@ class Product(db.Model):
         self.stock = stock
         self.active = active
 
-# Create the tables inside the app context
-with app.app_context():
-    db.create_all()

@@ -22,6 +22,7 @@ db = SQLAlchemy(app)
 jwt = JWTManager(app)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+
 # ✅ Import all models here
 from models.user import User
 from models.user_profile import UserProfile

@@ -6,6 +6,7 @@ import { AuthContext } from "./AuthContent";
 import { API_URLS } from "../common/urls";
 import { useCart } from "../context/CartContext";
 
+
 function CustomerLogin() {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,6 +14,7 @@ function CustomerLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,6 +28,7 @@ function CustomerLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccessMessage("");
     setIsLoading(true);
 
     try {
@@ -38,6 +41,7 @@ function CustomerLogin() {
       
       if (response.data.message === "Login Successful") {
         login(usernameOrEmail, "customer");
+        setSuccessMessage("Login Sucessful!...")
 
         if (rememberMe) {
           localStorage.setItem("rememberUser", usernameOrEmail);
@@ -52,11 +56,11 @@ function CustomerLogin() {
           localStorage.removeItem('pendingCart');
         }
 
-        // Redirect to the appropriate page
-        setTimeout(() => {
-          navigate(redirectTo === 'checkout' ? '/checkout' : `/${redirectTo}`);
-        }, 500);
-      }
+         setTimeout(() => {
+           navigate('/');
+        }, 1500);
+    }
+      
     } catch (err) {
       setError(err.response?.data?.error || "An error occurred");
     } finally {
@@ -122,6 +126,8 @@ function CustomerLogin() {
               Forgot password?
             </Link>
           </div>
+
+          {successMessage && <p className="text-green-500 text-sm">{successMessage}</p>}
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
 

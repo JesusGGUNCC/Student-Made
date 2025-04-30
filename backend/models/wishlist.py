@@ -1,4 +1,4 @@
-from app import db, app
+from app import db
 from datetime import datetime
 
 class Wishlist(db.Model):
@@ -13,6 +13,3 @@ class Wishlist(db.Model):
         self.username = username
         self.product_ids = product_ids
 
-# Create the table inside the app context
-with app.app_context():
-    db.create_all()

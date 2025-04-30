@@ -1,7 +1,7 @@
 // src/routes/AdminLogin.jsx
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "./AuthContent";
 import { API_URLS } from "../common/urls";
 

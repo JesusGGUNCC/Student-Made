@@ -19,6 +19,7 @@ SMTP_PORT = 587
 EMAIL_ADDRESS = os.getenv('EMAIL_USER')
 EMAIL_PASSWORD = os.getenv('EMAIL_PASS')
 
+
 @app.route("/api/user/signup", methods=["POST"])
 def signup():
     try: 
@@ -47,6 +48,7 @@ def signup():
 
         db.session.add(new_user)
         db.session.commit()
+
 
         return jsonify({"message": "Signup Successful", "username": username}), 201
     
@@ -95,6 +97,7 @@ def login():
 
 @app.route('/api/user/forgotPassword', methods = ['POST'])
 def forgot_password():
+
     email = request.json.get("email")
     if not email:
         return jsonify({"error": "Email is required"}), 400
@@ -111,7 +114,7 @@ def forgot_password():
 
     reset_link = f"http://localhost:5173/resetPassword?token={token}"
 
-    #print(f"Password reset link: http://localhost:5173/resetPassword?token={token}")
+    
 
  
     msg =  EmailMessage()

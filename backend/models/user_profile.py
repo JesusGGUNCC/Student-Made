@@ -1,4 +1,4 @@
-from app import db, app
+from app import db
 from datetime import datetime
 
 class UserProfile(db.Model):
@@ -31,6 +31,3 @@ class UserProfile(db.Model):
         self.state = state
         self.phone_number = phone_number
 
-# Create the table
-with app.app_context():
-    db.create_all()
