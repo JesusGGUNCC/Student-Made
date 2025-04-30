@@ -1,5 +1,5 @@
 // src/components/SearchFilter.jsx - Fixed version
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 function SearchFilter({ onSearch, categories, initialFilters = {} }) {
   const [searchTerm, setSearchTerm] = useState(initialFilters.searchTerm || '');
@@ -7,14 +7,19 @@ function SearchFilter({ onSearch, categories, initialFilters = {} }) {
   const [priceRange, setPriceRange] = useState(initialFilters.priceRange || { min: '', max: '' });
   const [sortBy, setSortBy] = useState(initialFilters.sortBy || 'default');
   const [expanded, setExpanded] = useState(false);
+  
+  // Use ref to track if this is the initial render
+  const isInitialMount = useRef(true);
 
-  // Apply initial filters on component mount
+  // Only apply filters when values change, not on initial render
   useEffect(() => {
-    handleFilterChange();
-  }, []);
+    // Skip the first render
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
 
-  // Debounce search to avoid too many filter operations while typing
-  useEffect(() => {
+    // Debounce search to avoid too many filter operations while typing
     const handler = setTimeout(() => {
       handleFilterChange();
     }, 300);
@@ -63,7 +68,7 @@ function SearchFilter({ onSearch, categories, initialFilters = {} }) {
           placeholder="Search products..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full p-3 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+          className="w-full px-3 py-2 pl-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-600"
         />
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
