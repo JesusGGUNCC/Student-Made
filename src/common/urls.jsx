@@ -1,4 +1,4 @@
-// src/common/urls.jsx - Updated with all API endpoints
+// src/common/urls.jsx - Updated with all API endpoints including the image upload endpoint
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const API_URLS = {
@@ -55,4 +55,7 @@ export const API_URLS = {
   vendorAll: `${BASE_URL}/api/vendor/all`,
   vendorRegister: `${BASE_URL}/api/vendor/register`,
   vendorDetails: `${BASE_URL}/api/vendor`,
+  
+  // Image upload endpoint
+  uploadImage: `${BASE_URL}/api/upload/image`,
 };

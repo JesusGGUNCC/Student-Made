@@ -1,4 +1,4 @@
-// src/components/ImageUploadComponent.jsx
+// src/components/ImageUploadComponent.jsx - Updated to use full URLs
 import React, { useState } from 'react';
 import axios from 'axios';
 import { API_URLS } from '../common/urls';
@@ -65,7 +65,7 @@ function ImageUploadComponent({ onImageUploaded, currentImage }) {
       formData.append('image', selectedFile);
       
       // Send the file to the backend
-      const response = await axios.post('/api/upload/image', formData, {
+      const response = await axios.post(API_URLS.uploadImage, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -73,9 +73,12 @@ function ImageUploadComponent({ onImageUploaded, currentImage }) {
       
       // Check if upload was successful
       if (response.data && response.data.success) {
+        // Create full URL using base URL
+        const fullImageUrl = `${window.location.origin.replace(':5173', ':5000')}${response.data.image_url}`;
+        
         // Call callback with the image URL
-        onImageUploaded(response.data.image_url);
-        setImageUrl(response.data.image_url);
+        onImageUploaded(fullImageUrl);
+        setImageUrl(fullImageUrl);
       } else {
         throw new Error(response.data?.error || 'Failed to upload image');
       }
