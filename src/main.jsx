@@ -31,6 +31,7 @@ import UserOrders from './routes/UserOrders.jsx'
 import VendorOrders from './routes/VendorOrders.jsx'
 import OrderDetail from './routes/OrderDetail.jsx'
 import SearchResults from './routes/SearchResults.jsx'
+import VendorPublicProfile from './routes/VendorPublicProfile.jsx';
 
 import './index.css'
 
@@ -59,7 +60,7 @@ const router = createBrowserRouter([
       { path: 'vendor/login', element: <VendorLogin/> },
       { path: 'vendor-profile', element: <VendorProfile/> },
       { path: 'vendor/orders', element: <VendorOrders/>},
-      { path: 'vendor/:vendorId', element: <VendorProfile/>},
+      { path: 'vendor/:vendorId', element: <VendorPublicProfile/> },
       
       // General routes
       { path: 'about', element: <About/> },

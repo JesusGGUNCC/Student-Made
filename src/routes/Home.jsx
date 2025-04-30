@@ -200,7 +200,7 @@ function Home() {
                             <div className="flex">
                                 {vendors.map((vendor, index) => (
                                     <div key={index} className="flex-shrink-0 min-w-[200px] w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 p-2 md:p-3">
-                                        <Link to={vendor.link} className="block h-full">
+                                        <Link to={`/vendor/${vendor.id}`} className="block h-full">
                                             <CreatorBubble imgSrc={vendor.img} name={vendor.name} />
                                         </Link>
                                     </div>
