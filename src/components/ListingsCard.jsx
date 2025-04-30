@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URLS } from '../common/urls';
+import ImageUploadComponent from './ImageUploadComponent';
 
 function ListingsCard({ 
   id, 
@@ -16,13 +17,7 @@ function ListingsCard({
 }) {
     // State to track if edit form is visible
     const [editTab, setEditTab] = useState(false);
-
-    // State for image upload
-    const [imageFile, setImageFile] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
-    const [uploadingImage, setUploadingImage] = useState(false);
-    const [imageError, setImageError] = useState("");
-
+    
     // State to track product data
     const [editProduct, setEditProduct] = useState({
         name: name,
@@ -54,81 +49,19 @@ function ListingsCard({
             [name]: type === 'checkbox' ? checked : 
                   (name === 'price' || name === 'stock') ? 
                   parseFloat(value) || 0 : value
-        })
+        });
     };
 
-    // Handle image file selection
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        // Reset previous errors
-        setImageError("");
-        
-        // Check if file is an image
-        if (!file.type.match('image.*')) {
-            setImageError('Please select an image file');
-            return;
-        }
-        
-        // Check file size (limit to 2MB)
-        if (file.size > 2 * 1024 * 1024) {
-            setImageError('Image size exceeds 2MB. Please choose a smaller image.');
-            return;
-        }
-        
-        setImageFile(file);
-        
-        // Create image preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            setImagePreview(e.target.result);
-        };
-        reader.readAsDataURL(file);
-    };
-
-    // Handle image upload
-    const handleImageUpload = async () => {
-        if (!imageFile) return;
-        
-        setUploadingImage(true);
-        setImageError("");
-        
-        try {
-            // Create form data for file upload
-            const formData = new FormData();
-            formData.append('image', imageFile);
-            
-            // Send the file to the backend
-            const response = await axios.post('/api/upload/image', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-            
-            // Check if upload was successful
-            if (response.data.success) {
-                // Update the product with the new image URL
-                setEditProduct({
-                    ...editProduct,
-                    image: response.data.image_url
-                });
-                
-                // Clear file selection
-                setImageFile(null);
-            } else {
-                setImageError(response.data.error || 'Failed to upload image');
-            }
-        } catch (error) {
-            console.error('Error uploading image:', error);
-            setImageError(error.response?.data?.error || 'Failed to upload image. Please try again.');
-        } finally {
-            setUploadingImage(false);
-        }
+    // Handle image upload for product editing
+    const handleImageUploaded = (imageUrl) => {
+        setEditProduct({
+            ...editProduct,
+            image: imageUrl
+        });
     };
 
     const handleSubmit = (e) => {
-        e.preventDefault()
+        e.preventDefault();
 
         // Make sure image is a string and not null/undefined
         const updatedProduct = {
@@ -141,7 +74,7 @@ function ListingsCard({
         }
 
         setEditTab(false);
-    }
+    };
 
     // Categories for dropdown
     const productCategories = [
@@ -169,51 +102,6 @@ function ListingsCard({
     if (editTab) {
         return (
             <div className="border rounded-lg overflow-hidden shadow-md w-full sm:max-w-sm lg:max-w-md">
-                {/* Image Upload/Preview */}
-                <div className="h-40 sm:h-48 bg-gray-200 relative">
-                    <img 
-                        src={imagePreview || editProduct.image || placeholderImage} 
-                        alt={editProduct.name}
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = placeholderImage;
-                        }}
-                    />
-                    
-                    {/* Image upload overlay */}
-                    <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white opacity-0 hover:opacity-100 transition-opacity">
-                        <label className="cursor-pointer bg-white text-gray-800 px-3 py-1 rounded-md hover:bg-gray-100 mb-2">
-                            Select Image
-                            <input 
-                                type="file" 
-                                accept="image/*" 
-                                className="hidden" 
-                                onChange={handleImageChange}
-                                disabled={uploadingImage}
-                            />
-                        </label>
-                        
-                        {imageFile && (
-                            <button
-                                type="button"
-                                onClick={handleImageUpload}
-                                disabled={uploadingImage}
-                                className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700"
-                            >
-                                {uploadingImage ? 'Uploading...' : 'Upload'}
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Image error message */}
-                {imageError && (
-                    <div className="bg-red-50 text-red-700 p-2 text-sm">
-                        {imageError}
-                    </div>
-                )}
-
                 <div className="p-3 sm:p-4">
                     {/* Form to edit changes */}
                     <form className='space-y-2' onSubmit={handleSubmit}>
@@ -276,6 +164,12 @@ function ListingsCard({
                                 ))}
                             </select>
                         </div>
+
+                        {/* Image Upload Component */}
+                        <ImageUploadComponent 
+                            onImageUploaded={handleImageUploaded}
+                            currentImage={editProduct.image}
+                        />
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -404,7 +298,7 @@ function ListingsCard({
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
-export default ListingsCard
+export default ListingsCard;

@@ -1,4 +1,4 @@
-// src/routes/VendorProfile.jsx - Enhanced version
+// src/routes/VendorProfile.jsx - Enhanced with image upload
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -9,6 +9,7 @@ import { API_URLS } from '../common/urls';
 import VendorApplicationStatus from '../components/VendorApplicationStatus';
 import PaymentCard from '../components/PaymentCard';
 import ListingsCard from '../components/ListingsCard';
+import ImageUploadComponent from '../components/ImageUploadComponent';
 
 function VendorProfile() {
     const navigate = useNavigate();
@@ -91,6 +92,14 @@ function VendorProfile() {
                 : name === 'price' || name === 'stock'
                     ? parseFloat(value) || 0
                     : value
+        });
+    };
+
+    // Handle image upload for new product
+    const handleImageUploaded = (imageUrl) => {
+        setNewListing({
+            ...newListing,
+            image: imageUrl
         });
     };
 
@@ -269,52 +278,6 @@ function VendorProfile() {
         }
     };
 
-    const uploadProductImage = async (file, productId) => {
-        try {
-            setLoading(true);
-            
-            // Create form data for file upload
-            const formData = new FormData();
-            formData.append('image', file);
-            
-            // Send the file to the backend
-            const response = await axios.post('/api/upload/image', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-            
-            // Check if upload was successful
-            if (response.data.success) {
-                // Get the image URL from the response
-                const imageUrl = response.data.image_url;
-                
-                // Update the product with the new image URL
-                if (productId) {
-                    // Update existing product
-                    await handleUpdateListing(productId, { image: imageUrl });
-                } else {
-                    // For new product, update the form state
-                    setNewListing(prev => ({
-                        ...prev,
-                        image: imageUrl
-                    }));
-                }
-                
-                setError(null);
-                return imageUrl;
-            } else {
-                throw new Error(response.data.error || 'Failed to upload image');
-            }
-        } catch (err) {
-            console.error('Error uploading product image:', err);
-            setError('Failed to upload image. Please try again or use a URL instead.');
-            return null;
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleDeleteListing = async (id) => {
         if (!window.confirm('Are you sure you want to delete this product?')) {
             return;
@@ -324,7 +287,7 @@ function VendorProfile() {
             setLoading(true);
 
             // Send delete request to backend
-            await axios.delete(`${API_URLS.deleteProduct}/${id}`);
+            await axios.delete(`${API_URLS.deleteProduct}/${id}?username=${user.username}`);
 
             // Update local state
             setListings(listings.filter(listing => listing.id !== id));
@@ -498,20 +461,11 @@ function VendorProfile() {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Image URL
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="image"
-                                        value={newListing.image}
-                                        onChange={handleListingInputChange}
-                                        className="w-full px-3 py-2 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700"
-                                        placeholder="https://example.com/image.jpg"
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">Enter a URL for your product image or leave blank for a placeholder</p>
-                                </div>
+                                {/* New Image Upload Component */}
+                                <ImageUploadComponent 
+                                    onImageUploaded={handleImageUploaded}
+                                    currentImage={newListing.image}
+                                />
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
