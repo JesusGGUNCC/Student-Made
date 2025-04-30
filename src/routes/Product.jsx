@@ -80,7 +80,10 @@ function Product() {
           // Use mock data for testing
           setTimeout(() => {
             setProduct(mockProductDetail);
-            setRelatedProducts(mockRelatedProducts);
+            // Filter out current product from related products
+            setRelatedProducts(
+              mockRelatedProducts.filter(p => p.id !== parseInt(productId))
+            );
             setLoading(false);
           }, 500);
         } else {
@@ -92,7 +95,13 @@ function Product() {
           const relatedResponse = await axios.get(
             `${API_URLS.productsList}?category=${response.data.category}&exclude=${productId}`
           );
-          setRelatedProducts(relatedResponse.data.slice(0, 4)); // Limit to 4 related products
+          
+          // Filter out current product from related products
+          setRelatedProducts(
+            relatedResponse.data
+              .filter(p => p.id !== parseInt(productId))
+              .slice(0, 4)
+          );
           
           setLoading(false);
         }
@@ -132,7 +141,7 @@ function Product() {
   
   // Handle add to cart
   const handleAddToCart = () => {
-    if (!product || product.stock < quantity) return;
+    if (!product || product.stock <= 0) return;
     
     const existingItem = cartItems.find(item => item.id === product.id);
     
@@ -157,13 +166,12 @@ function Product() {
         stock: product.stock
       }]);
     }
-    
-    // Show success notification (you can implement this later)
-    // showNotification('Added to cart');
   };
   
   // Handle buy now
   const handleBuyNow = () => {
+    if (!product || product.stock <= 0) return;
+    
     handleAddToCart();
     
     if (isLoggedIn) {
@@ -237,12 +245,8 @@ function Product() {
     );
   }
   
-  // Mock multiple product images (in a real app, this would come from the API)
-  const productImages = [
-    product.image_url,
-    "https://images.unsplash.com/photo-1551028719-00167b16eac5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8amFja2V0fGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60",
-    "https://images.unsplash.com/photo-1551028719-00167b16eac5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8amFja2V0fGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60"
-  ];
+  // Create product images array with just the main image to avoid random placeholders
+  const productImages = product.image_url ? [product.image_url] : ["/placeholder.jpg"];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -275,28 +279,30 @@ function Product() {
             />
           </div>
           
-          {/* Thumbnail Images */}
-          <div className="flex gap-2 overflow-x-auto">
-            {productImages.map((img, index) => (
-              <button
-                key={index}
-                onClick={() => setSelectedImage(index)}
-                className={`h-20 w-20 flex-shrink-0 rounded border-2 overflow-hidden ${
-                  selectedImage === index ? 'border-green-700' : 'border-gray-200'
-                }`}
-              >
-                <img
-                  src={img}
-                  alt={`${product.name} - view ${index + 1}`}
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "/placeholder.jpg";
-                  }}
-                />
-              </button>
-            ))}
-          </div>
+          {/* Thumbnail Images - Only show if we have multiple images */}
+          {productImages.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto">
+              {productImages.map((img, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`h-20 w-20 flex-shrink-0 rounded border-2 overflow-hidden ${
+                    selectedImage === index ? 'border-green-700' : 'border-gray-200'
+                  }`}
+                >
+                  <img
+                    src={img}
+                    alt={`${product.name} - view ${index + 1}`}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/placeholder.jpg";
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         
         {/* Product Info */}
@@ -489,7 +495,8 @@ function Product() {
             {relatedProducts.map(relatedProduct => (
               <div 
                 key={relatedProduct.id}
-                className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => navigate(`/product/${relatedProduct.id}`)}
               >
                 <div className="h-48 bg-gray-100">
                   <img
@@ -507,7 +514,10 @@ function Product() {
                   <div className="flex justify-between items-end">
                     <p className="text-green-700 font-bold">${relatedProduct.price.toFixed(2)}</p>
                     <button
-                      onClick={() => navigate(`/product/${relatedProduct.id}`)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/product/${relatedProduct.id}`)
+                      }}
                       className="text-sm text-green-700 hover:underline"
                     >
                       View

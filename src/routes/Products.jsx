@@ -1,4 +1,4 @@
-// src/routes/Products.jsx - Updated with search functionality
+// src/routes/Products.jsx - Updated with search functionality and fixes
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import ProductCard from '../components/ProductCard';
@@ -29,11 +29,14 @@ function Products() {
           data = response.data;
         }
         
-        setProducts(data);
-        setFilteredProducts(data);
+        // Filter out inactive products
+        const activeProducts = data.filter(product => product.active !== false);
+        
+        setProducts(activeProducts);
+        setFilteredProducts(activeProducts); // Make sure this line is here to show products immediately
         
         // Extract unique categories
-        const uniqueCategories = [...new Set(data.map(product => product.category).filter(Boolean))];
+        const uniqueCategories = [...new Set(activeProducts.map(product => product.category).filter(Boolean))];
         setCategories(uniqueCategories);
         
         setError(null);
@@ -44,7 +47,7 @@ function Products() {
         setLoading(false);
       }
     };
-
+  
     fetchProducts();
   }, []);
 
@@ -96,7 +99,21 @@ function Products() {
         break;
     }
     
+    // Filter out products with stock <= 0 if requested
+    // Uncomment this if you want to hide out-of-stock products
+    // filtered = filtered.filter(product => product.stock > 0);
+    
     setFilteredProducts(filtered);
+  };
+
+  // Function to reset filters and show all products
+  const resetFilters = () => {
+    handleSearch({
+      searchTerm: '',
+      category: '',
+      priceRange: { min: '', max: '' },
+      sortBy: 'default'
+    });
   };
 
   return (
@@ -104,7 +121,16 @@ function Products() {
       <h1 className='text-3xl md:text-4xl font-bold text-center mb-6'>Shop All Products</h1>
       
       {/* Search and Filter Component */}
-      <SearchFilter onSearch={handleSearch} categories={categories} />
+      <SearchFilter 
+        onSearch={handleSearch} 
+        categories={categories}
+        initialFilters={{
+          searchTerm: '',
+          category: '',
+          priceRange: { min: '', max: '' },
+          sortBy: 'default'
+        }} 
+      />
       
       {/* Loading State */}
       {loading && (
@@ -125,12 +151,7 @@ function Products() {
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg mb-4">No products found matching your criteria</p>
           <button 
-            onClick={() => handleSearch({
-              searchTerm: '',
-              category: '',
-              priceRange: { min: '', max: '' },
-              sortBy: 'default'
-            })}
+            onClick={resetFilters}
             className="text-green-600 hover:text-green-800 font-medium"
           >
             Clear filters and show all products
@@ -149,8 +170,8 @@ function Products() {
               prodName={product.name}
               prodRating={product.rating}
               prodPrice={product.price}
-              prodStock={product.stock}
-              prodDescription={product.description}
+              prodStock={product.stock || 0} // Ensure stock is never undefined
+              prodDescription={product.description || ''} // Ensure description is never undefined
             />
           ))}
         </div>

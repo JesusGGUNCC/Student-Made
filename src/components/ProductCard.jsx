@@ -59,23 +59,6 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
             description: prodDescription
           }]);
         }
-      };
-
-    // Function to add item to wishlist
-    const handleAddToWishlist = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (!isInWishlist) {
-            addToWishlist({
-                id,
-                name: prodName,
-                price: prodPrice,
-                image: prodImg,
-                stock: prodStock,
-                description: prodDescription
-            });
-        }
     };
 
     return (
@@ -86,6 +69,10 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                         src={prodImg}
                         alt={prodName}
                         className='w-full h-64 object-cover rounded-t-2xl'
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/placeholder.jpg";
+                        }}
                     />
 
                     {/* Wishlist button */}
@@ -99,6 +86,18 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                             <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                         </svg>
                     </button>
+
+                    {/* Stock badge */}
+                    {prodStock <= 0 && (
+                        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                            SOLD OUT
+                        </div>
+                    )}
+                    {prodStock > 0 && prodStock <= 5 && (
+                        <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">
+                            LOW STOCK: {prodStock}
+                        </div>
+                    )}
                 </div>
 
                 <div className="p-4 flex-grow flex flex-col">
@@ -116,6 +115,11 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                         <div>
                             <p className='font-semibold text-green-600 text-lg'>
                                 ${prodPrice ? prodPrice.toFixed(2) : '0.00'}
+                            </p>
+                            
+                            {/* Display stock information */}
+                            <p className="text-xs text-gray-600">
+                                {prodStock > 0 ? `In stock: ${prodStock}` : 'Out of stock'}
                             </p>
 
                             {prodRating && (
