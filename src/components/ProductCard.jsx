@@ -33,6 +33,7 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
         });
     };
 
+    // In the handleAddToCart function in ProductCard.jsx
     const handleAddToCart = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -44,7 +45,7 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
         const existingItem = cartItems.find(item => item.id === id);
 
         if (existingItem) {
-            // Increase quantity up to available stock
+            // Only allow increasing quantity if it doesn't exceed available stock
             if (existingItem.quantity < normalizedStock) {
                 setCartItems(cartItems.map(item =>
                     item.id === id
@@ -52,6 +53,7 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                         : item
                 ));
             }
+            // If already at max stock, don't increase (do nothing)
         } else {
             // Add new item to cart
             setCartItems([...cartItems, {

@@ -1,19 +1,23 @@
-// src/components/Cart.jsx - Modified
-import React, { useContext } from 'react';
+import React from 'react';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../routes/AuthContent';
 
 function Cart() {
   const { cartItems, setCartItems } = useCart();
-  const { isLoggedIn } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Increase item quantity
+  // Increase item quantity with stock checking
   const increaseQuantity = (itemId) => {
-    setCartItems(cartItems.map(item => 
-      item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item
-    ));
+    // Find the current item to check its stock
+    const currentItem = cartItems.find(item => item.id === itemId);
+    
+    // Only allow increasing if quantity is below stock
+    if (currentItem && currentItem.quantity < currentItem.stock) {
+      setCartItems(cartItems.map(item => 
+        item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item
+      ));
+    }
+    // If already at max stock, do nothing
   };
 
   // Decrease item quantity
@@ -39,13 +43,7 @@ function Cart() {
 
   // Handle checkout button click
   const handleCheckout = () => {
-    if (isLoggedIn) {
-      navigate('/checkout');
-    } else {
-      // Save cart state to localStorage to persist it through login
-      localStorage.setItem('pendingCart', JSON.stringify(cartItems));
-      navigate('/login?redirect=checkout');
-    }
+    navigate('/checkout');
   };
 
   return (
@@ -100,6 +98,12 @@ function Cart() {
                         +
                       </button>
                     </div>
+                    {/* Optional: Display stock info/warning */}
+                    {item.stock > 0 && item.quantity >= item.stock && (
+                      <p className="text-red-500 text-xs mt-1">
+                        Maximum available quantity ({item.stock}) reached
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -140,7 +144,7 @@ function Cart() {
                 className="w-full bg-black text-white py-3 rounded-full mt-6 hover:bg-gray-800 transition-colors"
                 disabled={cartItems.length === 0}
               >
-                {isLoggedIn ? 'Checkout' : 'Sign in to Checkout'}
+                Checkout
               </button>
             </div>
           </div>
