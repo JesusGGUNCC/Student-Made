@@ -57,6 +57,11 @@ from routes.vendor_products import *  # New vendor product management routes
 from routes.upload import upload_bp
 app.register_blueprint(upload_bp)
 
+
+print("Registered routes:")
+for rule in app.url_map.iter_rules():
+    print(f"{rule} - {rule.methods}")
+
 # Add any additional app settings or hook registrations here
 
 if __name__ == '__main__':

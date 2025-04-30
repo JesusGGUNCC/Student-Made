@@ -46,10 +46,11 @@ export const API_URLS = {
   
   // Vendor product management endpoints
   vendorProducts: `${BASE_URL}/api/vendor/products`,
-  addProduct: `${BASE_URL}/api/vendor/product`,
+  addProduct: `${BASE_URL}/api/vendor/add-product`,
   updateProduct: `${BASE_URL}/api/vendor/product`,
   deleteProduct: `${BASE_URL}/api/vendor/product`,
   bulkAddProducts: `${BASE_URL}/api/vendor/products/bulk`,
+
   
   // Vendor endpoints
   vendorAll: `${BASE_URL}/api/vendor/all`,

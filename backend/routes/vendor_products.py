@@ -60,25 +60,37 @@ def upload_image():
 
 
 # 🔍 Get vendor products
+# Update the get_vendor_products function in backend/routes/vendor_products.py
 @app.route("/api/vendor/products", methods=["GET"])
 def get_vendor_products():
     try:
         # Get vendor username from query parameter
         username = request.args.get('username')
+        print(f"Received request for vendor products with username: {username}")
+        
         if not username:
             return jsonify({"error": "Username is required"}), 400
         
-        # Find the vendor ID associated with this user
+        # Find the user
         user = User.query.filter_by(username=username).first()
-        if not user or user.role != 'vendor':
-            return jsonify({"error": "User is not a vendor"}), 403
+        if not user:
+            print(f"User not found: {username}")
+            return jsonify({"error": "User not found"}), 404
         
+        print(f"Found user with role: {user.role}")
+        
+        # Find vendor by email or username
         vendor = Vendor.query.filter_by(email=user.email).first()
         if not vendor:
-            return jsonify({"error": "Vendor profile not found"}), 404
+            print(f"Vendor profile not found for user: {username}")
+            # Return empty products list instead of error
+            return jsonify([]), 200
         
-        # Get all products for this vendor - include both active and inactive
+        print(f"Found vendor with ID: {vendor.id}")
+        
+        # Get all products for this vendor
         products = Product.query.filter_by(vendor_id=vendor.id).all()
+        print(f"Found {len(products)} products for vendor")
         
         # Convert to JSON response
         product_list = []
@@ -87,19 +99,19 @@ def get_vendor_products():
                 "id": product.id,
                 "name": product.name,
                 "price": product.price,
-                "description": product.description if hasattr(product, 'description') else None,
-                "category": product.category if hasattr(product, 'category') else None,
+                "description": product.description,
+                "category": product.category,
                 "image_url": product.image_url,
                 "rating": product.rating,
-                "stock": product.stock if hasattr(product, 'stock') else 0,
-                "active": product.active if hasattr(product, 'active') else True
+                "stock": product.stock,
+                "active": product.active
             })
         
         return jsonify(product_list), 200
-    
+        
     except Exception as e:
-        print(f"Error fetching vendor products: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
+        print(f"Error in get_vendor_products: {str(e)}")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 # 🚀 Add a new product
 @app.route("/api/vendor/product", methods=["POST"])
@@ -107,6 +119,7 @@ def add_vendor_product():
     try:
         # Get product data from request
         data = request.get_json()
+        print(f"Received add product request with data: {data}")
         
         # Validate required fields
         required_fields = ['name', 'price', 'description', 'category', 'vendor_username']
@@ -114,11 +127,11 @@ def add_vendor_product():
             if field not in data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
         
-        # Check if the user is a vendor
+        # Check if the user exists
         username = data.get('vendor_username')
         user = User.query.filter_by(username=username).first()
-        if not user or user.role != 'vendor':
-            return jsonify({"error": "User is not a vendor"}), 403
+        if not user:
+            return jsonify({"error": "User not found"}), 404
         
         # Get vendor ID
         vendor = Vendor.query.filter_by(email=user.email).first()
@@ -140,6 +153,8 @@ def add_vendor_product():
         
         db.session.add(new_product)
         db.session.commit()
+        
+        print(f"Product added successfully: {new_product.id}")
         
         return jsonify({
             "message": "Product added successfully",
