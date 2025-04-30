@@ -122,9 +122,9 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                                 ${prodPrice ? prodPrice.toFixed(2) : '0.00'}
                             </p>
                             
-                            {/* Display stock information */}
+                            {/* Improved stock display */}
                             <p className="text-xs text-gray-600">
-                                {prodStock > 0 ? `In stock: ${prodStock}` : 'Out of stock'}
+                                {prodStock > 0 ? `In stock: ${prodStock} left` : 'Out of stock'}
                             </p>
 
                             {prodRating && (

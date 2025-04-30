@@ -1,4 +1,4 @@
-// src/routes/Products.jsx - Updated to properly filter inactive products
+// src/routes/Products.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import ProductCard from '../components/ProductCard';
