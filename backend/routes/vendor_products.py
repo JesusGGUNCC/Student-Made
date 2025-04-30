@@ -8,59 +8,7 @@ from models.product import Product
 from models.user import User
 from models.vendor import Vendor
 
-# Configure upload folder
-UPLOAD_FOLDER = 'static/uploads/products'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-
-# Ensure upload directory exists
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# Helper function to check if file extension is allowed
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-# Image upload endpoint
-@app.route('/api/upload/image', methods=['POST'])
-def upload_image():
-    try:
-        # Check if the post request has the file part
-        if 'image' not in request.files:
-            return jsonify({'error': 'No file part'}), 400
-            
-        file = request.files['image']
-        
-        # If user does not select file, browser also
-        # submit an empty part without filename
-        if file.filename == '':
-            return jsonify({'error': 'No selected file'}), 400
-            
-        if file and allowed_file(file.filename):
-            # Generate unique filename to prevent overwrites
-            filename = secure_filename(file.filename)
-            unique_filename = f"{uuid.uuid4()}_{filename}"
-            
-            # Save the file
-            file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
-            file.save(file_path)
-            
-            # Return the URL that can be used to access the file
-            image_url = f"/static/uploads/products/{unique_filename}"
-            
-            return jsonify({
-                'success': True,
-                'image_url': image_url
-            }), 200
-        else:
-            return jsonify({'error': 'File type not allowed'}), 400
-            
-    except Exception as e:
-        print(f"Error uploading image: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-
 # 🔍 Get vendor products
-# Update the get_vendor_products function in backend/routes/vendor_products.py
 @app.route("/api/vendor/products", methods=["GET"])
 def get_vendor_products():
     try:
@@ -133,10 +81,20 @@ def add_vendor_product():
         if not user:
             return jsonify({"error": "User not found"}), 404
         
-        # Get vendor ID
+        # Get vendor ID - or create a vendor if one doesn't exist
         vendor = Vendor.query.filter_by(email=user.email).first()
         if not vendor:
-            return jsonify({"error": "Vendor profile not found"}), 404
+            # Create a new vendor record
+            new_vendor = Vendor(
+                name=username,  # Use username as name by default
+                email=user.email,
+                phone="",  # Empty by default
+                company_name=""  # Empty by default
+            )
+            db.session.add(new_vendor)
+            db.session.commit()
+            vendor = new_vendor
+            print(f"Created new vendor record for {username}")
         
         # Create new product
         new_product = Product(
@@ -188,10 +146,20 @@ def update_vendor_product(product_id):
         if not user or (user.role != 'vendor' and user.role != 'admin'):
             return jsonify({"error": "User is not a vendor"}), 403
         
-        # Get vendor ID
+        # Get vendor ID - or create a vendor if one doesn't exist
         vendor = Vendor.query.filter_by(email=user.email).first()
         if not vendor:
-            return jsonify({"error": "Vendor profile not found"}), 404
+            # Create a new vendor record
+            new_vendor = Vendor(
+                name=username,  # Use username as name by default
+                email=user.email,
+                phone="",  # Empty by default
+                company_name=""  # Empty by default
+            )
+            db.session.add(new_vendor)
+            db.session.commit()
+            vendor = new_vendor
+            print(f"Created new vendor record for {username}")
         
         # Verify ownership
         if product.vendor_id != vendor.id and user.role != 'admin':
@@ -258,10 +226,20 @@ def delete_vendor_product(product_id):
         if not user or user.role != 'vendor':
             return jsonify({"error": "User is not a vendor"}), 403
         
-        # Get vendor ID
+        # Get vendor ID - or create a vendor if one doesn't exist
         vendor = Vendor.query.filter_by(email=user.email).first()
         if not vendor:
-            return jsonify({"error": "Vendor profile not found"}), 404
+            # Create a new vendor record
+            new_vendor = Vendor(
+                name=username,  # Use username as name by default
+                email=user.email,
+                phone="",  # Empty by default
+                company_name=""  # Empty by default
+            )
+            db.session.add(new_vendor)
+            db.session.commit()
+            vendor = new_vendor
+            print(f"Created new vendor record for {username}")
         
         # Verify ownership
         if product.vendor_id != vendor.id:
@@ -303,10 +281,20 @@ def bulk_add_vendor_products():
         if not user or user.role != 'vendor':
             return jsonify({"error": "User is not a vendor"}), 403
         
-        # Get vendor ID
+        # Get vendor ID - or create a vendor if one doesn't exist
         vendor = Vendor.query.filter_by(email=user.email).first()
         if not vendor:
-            return jsonify({"error": "Vendor profile not found"}), 404
+            # Create a new vendor record
+            new_vendor = Vendor(
+                name=username,  # Use username as name by default
+                email=user.email,
+                phone="",  # Empty by default
+                company_name=""  # Empty by default
+            )
+            db.session.add(new_vendor)
+            db.session.commit()
+            vendor = new_vendor
+            print(f"Created new vendor record for {username}")
         
         # Create products
         product_ids = []
