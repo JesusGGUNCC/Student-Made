@@ -1,4 +1,4 @@
-// src/routes/VendorProfile.jsx - Enhanced with image upload
+// src/routes/VendorProfile.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -50,6 +50,15 @@ function VendorProfile() {
         active: true
     });
 
+    // State for editing profile
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [profileData, setProfileData] = useState({
+        storeName: user ? `${user.username}'s Store` : '',
+        phoneNumber: '',
+        bio: '',
+        contactEmail: user ? user.email : ''
+    });
+
     // Fetch vendor's products when component mounts or when tab changes
     useEffect(() => {
         if (activeTab === 'listings' && isLoggedIn && user) {
@@ -58,7 +67,6 @@ function VendorProfile() {
     }, [activeTab, isLoggedIn, user]);
 
     // Fetch vendor products from backend
-    // Updated fetchVendorProducts function with better image handling
     const fetchVendorProducts = async () => {
         try {
             setLoading(true);
@@ -90,8 +98,7 @@ function VendorProfile() {
         }
     };
 
-
-    // ---- Profile Tab State Management (from BuyerProfile) ----
+    // ---- Profile Tab State Management ----
     const [deliveryOption, setDeliveryOption] = useState('shipping');
     const [billingAddressSameAsShipping, setBillingAddressSameAsShipping] = useState(true);
 
@@ -105,6 +112,22 @@ function VendorProfile() {
                     ? parseFloat(value) || 0
                     : value
         });
+    };
+
+    // Handle profile data changes
+    const handleProfileChange = (e) => {
+        const { name, value } = e.target;
+        setProfileData({
+            ...profileData,
+            [name]: value
+        });
+    };
+
+    // Handle saving profile data
+    const handleSaveProfile = () => {
+        // In a real implementation, you would send profile data to the backend
+        console.log("Saving profile data:", profileData);
+        setIsEditingProfile(false);
     };
 
     // Handle image upload for new product
@@ -129,10 +152,10 @@ function VendorProfile() {
 
             // Add vendor username
             const productData = {
-                ...newListing,  // Use newListing instead of updatedData
+                ...newListing,
                 vendor_username: user.username,
                 // Ensure image is a valid string, not null or undefined
-                image: newListing.image || ''  // Use newListing instead of updatedData
+                image: newListing.image || ''
             };
 
             // Send to backend
@@ -305,14 +328,6 @@ function VendorProfile() {
             // Method 1: URL parameter
             await axios.delete(`${API_URLS.deleteProduct}/${id}?username=${user.username}`);
 
-            // If that fails, uncomment and try this alternative approach:
-            // Method 2: Using params object
-            /*
-            await axios.delete(`${API_URLS.deleteProduct}/${id}`, {
-              params: { username: user.username }
-            });
-            */
-
             console.log('Delete API call successful');
 
             // Update local state
@@ -374,10 +389,179 @@ function VendorProfile() {
             {/* Profile Tab Content */}
             {activeTab === 'profile' && (
                 <>
-                    <p className="text-4xl font-bold my-6 text-center md:text-left">Vendor Profile</p>
-                    <div className='w-full md:w-2/3'>
-                        {/* Keep existing profile tab content */}
-                        {/* ... */}
+                    <h1 className="text-4xl font-bold mb-6">Vendor Profile</h1>
+                    
+                    {/* Profile Details Section */}
+                    <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                        {isEditingProfile ? (
+                            // Edit Profile Form
+                            <form className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Store Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="storeName"
+                                            value={profileData.storeName}
+                                            onChange={handleProfileChange}
+                                            className="w-full px-3 py-2 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Contact Email
+                                        </label>
+                                        <input
+                                            type="email"
+                                            name="contactEmail"
+                                            value={profileData.contactEmail}
+                                            onChange={handleProfileChange}
+                                            className="w-full px-3 py-2 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Phone Number
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            name="phoneNumber"
+                                            value={profileData.phoneNumber}
+                                            onChange={handleProfileChange}
+                                            className="w-full px-3 py-2 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700"
+                                            placeholder="(123) 456-7890"
+                                        />
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Store/Vendor Bio
+                                    </label>
+                                    <textarea
+                                        name="bio"
+                                        value={profileData.bio}
+                                        onChange={handleProfileChange}
+                                        rows="4"
+                                        className="w-full px-3 py-2 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700"
+                                        placeholder="Tell customers about yourself and your products..."
+                                    ></textarea>
+                                </div>
+                                
+                                <div className="flex justify-end space-x-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditingProfile(false)}
+                                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleSaveProfile}
+                                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+                                    >
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        ) : (
+                            // Profile Display
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Vendor Basic Information */}
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4 text-green-800 border-b pb-2">Basic Information</h3>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <p className="text-gray-600 font-medium">Vendor Name</p>
+                                            <p className="text-gray-800">{user ? user.username : 'Loading...'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-gray-600 font-medium">Email Address</p>
+                                            <p className="text-gray-800">{user ? user.email : 'Loading...'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-gray-600 font-medium">Account Status</p>
+                                            <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">
+                                                Active Vendor
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <p className="text-gray-600 font-medium">Member Since</p>
+                                            <p className="text-gray-800">
+                                                {user && user.created_at 
+                                                    ? new Date(user.created_at).toLocaleDateString() 
+                                                    : new Date().toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                        {profileData.phoneNumber && (
+                                            <div>
+                                                <p className="text-gray-600 font-medium">Phone Number</p>
+                                                <p className="text-gray-800">{profileData.phoneNumber}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Store Information */}
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4 text-green-800 border-b pb-2">Store Information</h3>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <p className="text-gray-600 font-medium">Store Name</p>
+                                            <p className="text-gray-800">{profileData.storeName || (user ? `${user.username}'s Store` : 'Loading...')}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-gray-600 font-medium">Products Listed</p>
+                                            <p className="text-gray-800">{listings ? listings.length : '0'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-gray-600 font-medium">Product Categories</p>
+                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                {listings && listings.length > 0
+                                                    ? [...new Set(listings.map(item => item.category))]
+                                                        .filter(Boolean)
+                                                        .map((category, index) => (
+                                                            <span key={index} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
+                                                                {category}
+                                                            </span>
+                                                        ))
+                                                    : <span className="text-gray-500">No categories yet</span>
+                                                }
+                                            </div>
+                                        </div>
+                                        {profileData.bio && (
+                                            <div>
+                                                <p className="text-gray-600 font-medium">Store Bio</p>
+                                                <p className="text-gray-800">{profileData.bio}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Action buttons */}
+                        {!isEditingProfile && (
+                            <div className="mt-8 pt-6 border-t border-gray-200">
+                                <div className="flex flex-wrap gap-3">
+                                    <button
+                                        onClick={() => setActiveTab('listings')}
+                                        className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 transition-colors"
+                                    >
+                                        Manage Products
+                                    </button>
+                                    <button
+                                        onClick={() => setIsEditingProfile(true)}
+                                        className="border border-green-700 text-green-700 px-4 py-2 rounded hover:bg-green-50 transition-colors"
+                                    >
+                                        Edit Profile
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </>
             )}
@@ -673,7 +857,7 @@ Product Name,19.99,10,Product description,Jewelry,https://example.com/image.jpg,
                 </div>
             )}
 
-            {/* Orders Tab Content - We'll implement this in the next step */}
+            {/* Orders Tab Content */}
             {activeTab === 'orders' && (
                 <div className="text-center py-8">
                     <p className="text-xl text-gray-600 mb-4">Order management will be available in the next update.</p>
