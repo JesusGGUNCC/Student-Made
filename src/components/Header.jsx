@@ -9,7 +9,7 @@ function Header() {
     const wishlistItemCount = wishlistItems.length;
     const { cartItemCount } = useCart();
     const navigate = useNavigate();
-    const { isLoggedIn, logout, userRole } = useContext(AuthContext);
+    const { isLoggedIn, logout, userRole, user } = useContext(AuthContext);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -42,8 +42,42 @@ function Header() {
     }, [isDropdownOpen]);
 
     return (
-        <nav className='px-4 sm:px-6 md:px-10 flex flex-wrap justify-between items-center h-[10vh] bg-(--niner-green) text-white'>
-            {/* ... existing code */}
+        <nav className='px-4 sm:px-6 md:px-10 flex flex-wrap justify-between items-center h-[10vh] bg-green-800 text-white'>
+            {/* Logo */}
+            <div className='flex items-center'>
+                <Link to="/" className="text-2xl font-bold">Niner Mine</Link>
+            </div>
+
+            {/* Mobile menu button */}
+            <button
+                className="md:hidden"
+                onClick={toggleMobileMenu}
+                aria-label="Toggle menu"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    {isMobileMenuOpen ? (
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                        />
+                    ) : (
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 6h16M4 12h16M4 18h16"
+                        />
+                    )}
+                </svg>
+            </button>
 
             {/* Desktop menu */}
             <div className='hidden md:flex items-center justify-between w-full max-w-[500px] text-base lg:text-lg font-medium'>
@@ -56,7 +90,7 @@ function Header() {
                             onClick={toggleDropdown}
                             className="hover:text-gray-300 rounded hover:bg-green-700 transition-colors"
                         >
-                            My Profile
+                            {user ? user.username : 'My Account'}
                         </button>
 
                         {isDropdownOpen && (
@@ -71,6 +105,20 @@ function Header() {
                                 >
                                     Profile
                                 </Link>
+
+                                {/* Add vendor dashboard link for vendor users */}
+                                {userRole === 'vendor' && (
+                                    <>
+                                        <div className="border-t border-gray-400 mx-2"></div>
+                                        <Link
+                                            to="/vendor-profile"
+                                            className="block px-4 py-2.5 text-gray-800 hover:bg-gray-300 text-[0.95rem] font-medium transition-colors"
+                                            onClick={() => setIsDropdownOpen(false)}
+                                        >
+                                            Vendor Dashboard
+                                        </Link>
+                                    </>
+                                )}
 
                                 {/* Add admin dashboard link for admin users */}
                                 {userRole === 'admin' && (
@@ -122,22 +170,84 @@ function Header() {
                 </Link>
             </div>
 
-            {/* Update mobile menu to include admin link */}
+            {/* Mobile menu */}
             {isMobileMenuOpen && (
                 <div className="md:hidden w-full pt-2 pb-3 space-y-1">
-                    {/* ... existing mobile menu links */}
-
-                    {isLoggedIn && userRole === 'admin' && (
+                    <Link
+                        to="/about"
+                        className="block px-3 py-2 hover:bg-green-700 rounded-md"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                        About
+                    </Link>
+                    <Link
+                        to="/shop-all"
+                        className="block px-3 py-2 hover:bg-green-700 rounded-md"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                        Shop
+                    </Link>
+                    <Link
+                        to="/wishlist"
+                        className="block px-3 py-2 hover:bg-green-700 rounded-md"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                        Wishlist ({wishlistItemCount})
+                    </Link>
+                    <Link
+                        to="/cart"
+                        className="block px-3 py-2 hover:bg-green-700 rounded-md"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                        Cart ({cartItemCount})
+                    </Link>
+                    
+                    {isLoggedIn ? (
+                        <>
+                            <Link
+                                to="/buyerprofile"
+                                className="block px-3 py-2 hover:bg-green-700 rounded-md"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                                Profile
+                            </Link>
+                            
+                            {userRole === 'vendor' && (
+                                <Link
+                                    to="/vendor-profile"
+                                    className="block px-3 py-2 hover:bg-green-700 rounded-md"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Vendor Dashboard
+                                </Link>
+                            )}
+                            
+                            {userRole === 'admin' && (
+                                <Link
+                                    to="/admin"
+                                    className="block px-3 py-2 hover:bg-green-700 rounded-md"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Admin Dashboard
+                                </Link>
+                            )}
+                            
+                            <button
+                                onClick={handleLogout}
+                                className="block w-full text-left px-3 py-2 hover:bg-green-700 rounded-md"
+                            >
+                                Logout
+                            </button>
+                        </>
+                    ) : (
                         <Link
-                            to="/admin"
+                            to="/login"
                             className="block px-3 py-2 hover:bg-green-700 rounded-md"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
-                            Admin Dashboard
+                            Login/Sign Up
                         </Link>
                     )}
-
-                    {/* ... rest of mobile menu */}
                 </div>
             )}
         </nav>

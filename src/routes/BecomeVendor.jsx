@@ -1,5 +1,5 @@
-// src/routes/BecomeVendor.jsx - Modified to include password fields
-import React, { useState, useContext } from "react";
+// src/routes/BecomeVendor.jsx - Modified to handle username properly
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_URLS } from "../common/urls";
@@ -18,9 +18,36 @@ const BecomeVendor = () => {
   const [productType, setProductType] = useState([]);
   const [password, setPassword] = useState(""); // New password field
   const [confirmPassword, setConfirmPassword] = useState(""); // New confirm password field
+  const [username, setUsername] = useState(""); // Username field
   const [applicationStatus, setApplicationStatus] = useState("notSubmitted");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Fill in fields from user data if logged in
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      setUsername(user.username);
+      setEmail(user.email || "");
+      
+      // Check if the user already has a pending application
+      checkApplicationStatus();
+    }
+  }, [isLoggedIn, user]);
+
+  // Check if user already has a pending application
+  const checkApplicationStatus = async () => {
+    if (!user || !user.username) return;
+    
+    try {
+      const response = await axios.get(`${API_URLS.vendorApplicationStatus}?username=${user.username}`);
+      
+      if (response.data.status !== "none") {
+        setApplicationStatus(response.data.status);
+      }
+    } catch (error) {
+      console.error("Error checking application status:", error);
+    }
+  };
 
   // Product type options
   const productTypes = [
@@ -37,6 +64,16 @@ const BecomeVendor = () => {
     }
   };
 
+  // Validate username (only letters, numbers, and underscores)
+  const validateUsername = (username) => {
+    return /^[a-zA-Z0-9_]+$/.test(username);
+  };
+
+  // Validate email
+  const validateEmail = (email) => {
+    return /\S+@\S+\.\S+/.test(email);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -46,13 +83,23 @@ const BecomeVendor = () => {
       return;
     }
     
-    if (!email.includes("@") || !email.includes(".")) {
+    if (!validateEmail(email)) {
       setError("Please enter a valid email address");
       return;
     }
     
-    // If not logged in, require and validate password
+    // If not logged in, require username and validate password
     if (!isLoggedIn) {
+      if (!username) {
+        setError("Username is required");
+        return;
+      }
+      
+      if (!validateUsername(username)) {
+        setError("Username can only contain letters, numbers, and underscores");
+        return;
+      }
+      
       if (!password) {
         setError("Password is required to create a vendor account");
         return;
@@ -81,7 +128,7 @@ const BecomeVendor = () => {
         company_name: companyName,
         description,
         product_types: productType,
-        username: isLoggedIn ? user.username : null
+        username: isLoggedIn ? user.username : username
       };
       
       // Add password if not logged in
@@ -97,13 +144,18 @@ const BecomeVendor = () => {
         
         // Clear form
         setName("");
-        setEmail("");
         setPhone("");
         setCompanyName("");
         setDescription("");
         setProductType([]);
         setPassword("");
         setConfirmPassword("");
+        
+        // Keep username and email if entered
+        if (!isLoggedIn) {
+          // setUsername("");
+          // setEmail("");
+        }
       }
     } catch (error) {
       console.error("Error submitting vendor application:", error);
@@ -117,17 +169,60 @@ const BecomeVendor = () => {
   if (applicationStatus === "pending") {
     return (
       <div className="max-w-3xl mx-auto p-6 md:p-8 lg:p-10">
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-          <h2 className="text-2xl font-bold text-green-800 mb-4">Application Submitted!</h2>
-          <p className="text-green-700 mb-6">
-            Thank you for applying to become a vendor at Niner Mine. We've received your application and will review it shortly.
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+          <h2 className="text-2xl font-bold text-yellow-800 mb-4">Application Pending Review</h2>
+          <p className="text-yellow-700 mb-6">
+            Thank you for applying to become a vendor at Niner Mine. Your application has been submitted and is currently under review.
             You'll receive an email notification once your application has been reviewed.
           </p>
           <button
             onClick={() => navigate("/")}
-            className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors"
+            className="bg-yellow-600 text-white px-6 py-2 rounded-md hover:bg-yellow-700 transition-colors"
           >
             Return to Homepage
+          </button>
+        </div>
+      </div>
+    );
+  } else if (applicationStatus === "approved") {
+    return (
+      <div className="max-w-3xl mx-auto p-6 md:p-8 lg:p-10">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+          <h2 className="text-2xl font-bold text-green-800 mb-4">Application Approved!</h2>
+          <p className="text-green-700 mb-6">
+            Congratulations! Your vendor application has been approved. You can now access your vendor dashboard and start listing products.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => navigate("/vendor-profile")}
+              className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors"
+            >
+              Go to Vendor Dashboard
+            </button>
+            <button
+              onClick={() => navigate("/")}
+              className="border border-green-600 text-green-700 px-6 py-2 rounded-md hover:bg-green-50 transition-colors"
+            >
+              Return to Homepage
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  } else if (applicationStatus === "rejected") {
+    return (
+      <div className="max-w-3xl mx-auto p-6 md:p-8 lg:p-10">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <h2 className="text-2xl font-bold text-red-800 mb-4">Application Not Approved</h2>
+          <p className="text-red-700 mb-6">
+            We're sorry, but your vendor application was not approved at this time. You may apply again with updated information
+            by filling out the form below.
+          </p>
+          <button
+            onClick={() => setApplicationStatus("notSubmitted")}
+            className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors"
+          >
+            Apply Again
           </button>
         </div>
       </div>
@@ -172,6 +267,7 @@ const BecomeVendor = () => {
               className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 focus:outline-none"
               placeholder="Your email address"
               required
+              disabled={isLoggedIn} // Disable if user is logged in
             />
             <p className="text-xs text-gray-500 mt-1">Preferably your UNCC email</p>
           </div>
@@ -202,6 +298,26 @@ const BecomeVendor = () => {
             />
           </div>
         </div>
+        
+        {/* Username field - only show if user is not logged in */}
+        {!isLoggedIn && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Username <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 focus:outline-none"
+                placeholder="Choose a username"
+                required={!isLoggedIn}
+              />
+              <p className="text-xs text-gray-500 mt-1">Only letters, numbers, and underscores</p>
+            </div>
+          </div>
+        )}
         
         {/* Password fields - only show if user is not logged in */}
         {!isLoggedIn && (

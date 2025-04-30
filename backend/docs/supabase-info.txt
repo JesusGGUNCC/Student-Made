@@ -1,0 +1,4 @@
+https://supabase.com/dashboard/sign-in
+github SSO jkrishn3@uncc.edu
+Password: Project4155
+

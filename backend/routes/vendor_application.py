@@ -26,6 +26,21 @@ def submit_vendor_application():
         if existing_app:
             return jsonify({"error": "You already have a pending application"}), 400
         
+        # If username is provided, check if user exists
+        username = data.get('username')
+        if username:
+            existing_user = User.query.filter_by(username=username).first()
+            if not existing_user:
+                # If username is provided but user doesn't exist and we have a password, 
+                # we'll create the user later when approved
+                if not data.get('password'):
+                    return jsonify({"error": "Password is required for new user"}), 400
+            else:
+                # Username exists, use this user for the application
+                username = existing_user.username
+                # No need for password as user already exists
+                data['password'] = None
+        
         # Handle product_types - convert list to JSON string
         product_types = data.get('product_types')
         if isinstance(product_types, list):
@@ -44,7 +59,7 @@ def submit_vendor_application():
             company_name=data.get('company_name'),
             description=data.get('description'),
             product_types=product_types,
-            username=data.get('username'),
+            username=username,
             password=password_hash
         )
         
@@ -146,6 +161,17 @@ def process_vendor_application(application_id):
                     # Preserve admin role if applicable
                     if user.role != "admin":
                         user.role = "vendor"
+                else:
+                    # Username specified but user doesn't exist
+                    # Create new user with provided username if we have a password
+                    if application.password:
+                        new_user = User(
+                            username=application.username,
+                            email=application.email,
+                            password=application.password,  # Already hashed
+                            role="vendor"
+                        )
+                        db.session.add(new_user)
             # If no username but has password, create a new user account
             elif application.password:
                 # Generate a username from email if none exists
