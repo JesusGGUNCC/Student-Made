@@ -1,6 +1,8 @@
+# backend/routes/vendor.py - Updated with proper imports
 from app import app, db
 from models.vendor import Vendor
 from models.product import Product
+from models.user import User  
 from flask import request, jsonify
 
 # 🔍 Get all vendors
@@ -64,7 +66,6 @@ def delete_vendor(vendor_id):
         return jsonify({"error": "Internal server error"}), 500
 
 
-
 # Register a new vendor
 @app.route("/api/vendor/register", methods=["POST"])
 def register_vendor():
@@ -90,33 +91,4 @@ def register_vendor():
     except Exception as e:
         db.session.rollback()
         print(f"Error registering vendor: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
-
-
-# Add product for vendor
-@app.route("/api/vendor/<int:vendor_id>/add-product", methods=["POST"])
-def add_product_for_vendor(vendor_id):
-    try:
-        vendor = Vendor.query.get(vendor_id)
-        if not vendor:
-            return jsonify({"error": "Vendor not found"}), 404
-
-        data = request.get_json()
-        name = data.get("name")
-        price = data.get("price")
-        rating = data.get("rating")
-        image_url = data.get("image_url")
-
-        if not name or price is None:
-            return jsonify({"error": "Product name and price are required"}), 400
-
-        product = Product(name=name, price=price, rating=rating, image_url=image_url, vendor_id=vendor_id)
-        db.session.add(product)
-        db.session.commit()
-
-        return jsonify({"message": "Product added by vendor", "product_id": product.id}), 201
-
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error adding vendor product: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500

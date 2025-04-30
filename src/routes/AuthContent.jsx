@@ -1,4 +1,4 @@
-// src/routes/AuthContent.jsx - Modified
+// src/routes/AuthContent.jsx - Enhanced with user details
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URLS } from '../common/urls';
@@ -10,6 +10,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [userRole, setUserRole] = useState('customer'); // 'customer', 'vendor', or 'admin'
+    const [error, setError] = useState(null);
 
     // Check if user is logged in on initial load
     useEffect(() => {
@@ -18,33 +19,41 @@ export const AuthProvider = ({ children }) => {
                 setLoading(true);
                 // First check localStorage
                 const username = localStorage.getItem('username');
+                const storedUserRole = localStorage.getItem('userRole') || 'customer';
                 
                 if (username) {
-                    // Also check remembered session on backend
+                    // Try to fetch user details from backend
                     try {
-                        const response = await axios.get(API_URLS.checkRemembered);
-                        if (response.data.remembered) {
-                            setUser({ username: response.data.username });
-                            setIsLoggedIn(true);
-                            
-                            // TODO: Fetch user role from backend
-                            // For now we'll just check if they're a vendor based on username
-                            if (username.includes('vendor')) {
-                                setUserRole('vendor');
-                            }
-                        } else {
-                            // Session expired on server, clear local storage
-                            localStorage.removeItem('username');
-                        }
+                        // This would be a real API call in production
+                        // const response = await axios.get(`${API_URLS.userDetails}?username=${username}`);
+                        // const userData = response.data;
+                        
+                        // For now, mock the user data
+                        const userData = {
+                            username,
+                            email: `${username}@example.com`,
+                            role: storedUserRole
+                        };
+                        
+                        setUser(userData);
+                        setUserRole(userData.role);
+                        setIsLoggedIn(true);
+                        localStorage.setItem('userRole', userData.role);
                     } catch (err) {
-                        console.error("Error checking remembered session:", err);
-                        // Fallback to local storage
-                        setUser({ username });
+                        console.error("Error fetching user details:", err);
+                        
+                        // Create minimal user object from localStorage
+                        setUser({ 
+                            username,
+                            role: storedUserRole
+                        });
+                        setUserRole(storedUserRole);
                         setIsLoggedIn(true);
                     }
                 }
             } catch (error) {
                 console.error("Auth status check error:", error);
+                setError("Failed to verify authentication status");
             } finally {
                 setLoading(false);
             }
@@ -54,8 +63,16 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = (username, role = 'customer') => {
+        // Save user info to localStorage
         localStorage.setItem('username', username);
-        setUser({ username });
+        localStorage.setItem('userRole', role);
+        
+        // Set user state
+        setUser({ 
+            username,
+            email: `${username}@example.com`, // Mock email (would come from API in real app)
+            role
+        });
         setIsLoggedIn(true);
         setUserRole(role);
     };
@@ -67,10 +84,29 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error("Logout error:", error);
         } finally {
+            // Clear localStorage
             localStorage.removeItem('username');
+            localStorage.removeItem('userRole');
+            
+            // Reset state
             setUser(null);
             setIsLoggedIn(false);
             setUserRole('customer');
+        }
+    };
+
+    // Update user info
+    const updateUserInfo = (newUserInfo) => {
+        // Update local user state
+        setUser(prev => ({
+            ...prev,
+            ...newUserInfo
+        }));
+        
+        // If role is changed, update userRole state and localStorage
+        if (newUserInfo.role && newUserInfo.role !== userRole) {
+            setUserRole(newUserInfo.role);
+            localStorage.setItem('userRole', newUserInfo.role);
         }
     };
 
@@ -82,8 +118,10 @@ export const AuthProvider = ({ children }) => {
                 logout, 
                 user, 
                 loading,
+                error,
                 userRole,
-                setUserRole
+                setUserRole,
+                updateUserInfo
             }}
         >
             {children}

@@ -5,7 +5,8 @@ from flask import request, jsonify
 @app.route("/api/product/list", methods=["GET"])
 def get_all_products():
     try:
-        products = Product.query.all()
+        # Only get active products by default
+        products = Product.query.filter_by(active=True).all()
         product_list = [
             {
                 "id": product.id,
@@ -13,7 +14,11 @@ def get_all_products():
                 "price": product.price,
                 "rating": product.rating,
                 "image_url": product.image_url,
-                "vendor_id": product.vendor_id
+                "vendor_id": product.vendor_id,
+                "stock": product.stock,
+                "description": product.description,
+                "category": product.category,
+                "active": product.active
             }
             for product in products
         ]
@@ -41,7 +46,11 @@ def get_product_details():
             "price": product.price,
             "rating": product.rating,
             "image_url": product.image_url,
-            "vendor_id": product.vendor_id
+            "vendor_id": product.vendor_id,
+            "stock": product.stock,
+            "description": product.description,
+            "category": product.category,
+            "active": product.active
         }
         return jsonify(product_data), 200
     except Exception as e:
@@ -64,11 +73,25 @@ def add_products_bulk():
             rating = item.get("rating")
             image_url = item.get("image_url")
             vendor_id = item.get("vendor_id")
+            stock = item.get("stock", 0)  # Default to 0 if not provided
+            description = item.get("description", "")  # Default to empty string if not provided
+            category = item.get("category", "")  # Default to empty string if not provided
+            active = item.get("active", True)  # Default to True if not provided
 
             if not name or price is None:
                 return jsonify({"error": "Each product must have at least name and price"}), 400
 
-            new_product = Product(name=name, price=price, rating=rating, image_url=image_url, vendor_id=vendor_id)
+            new_product = Product(
+                name=name, 
+                price=price, 
+                rating=rating, 
+                image_url=image_url, 
+                vendor_id=vendor_id,
+                stock=stock,
+                description=description,
+                category=category,
+                active=active
+            )
             products_to_add.append(new_product)
 
         db.session.add_all(products_to_add)
@@ -92,4 +115,4 @@ def delete_all_products():
     except Exception as e:
         db.session.rollback()
         print(f"Error deleting products: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500    
+        return jsonify({"error": "Internal server error"}), 500
