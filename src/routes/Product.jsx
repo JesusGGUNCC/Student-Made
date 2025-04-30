@@ -1,4 +1,4 @@
-// src/routes/Product.jsx
+// src/routes/Product.jsx - Fixed version
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -312,7 +312,9 @@ function Product() {
             
             {/* Price and Rating */}
             <div className="flex items-center justify-between mb-4">
-              <span className="text-2xl font-bold text-green-700">${product.price.toFixed(2)}</span>
+              <span className="text-2xl font-bold text-green-700">
+                ${typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price).toFixed(2)}
+              </span>
               
               {product.rating && (
                 <div className="flex items-center">
@@ -344,7 +346,7 @@ function Product() {
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="font-medium">Quantity Available: {product.stock} left</span>
+                  <span className="font-medium">In Stock: {product.stock} left</span>
                 </div>
               ) : (
                 <div className="flex items-center text-red-600">
@@ -372,10 +374,14 @@ function Product() {
             {/* Description */}
             <div className="mb-6">
               <h3 className="text-lg font-semibold mb-2">Description</h3>
-              <p className="text-gray-700">{product.description || "No description available for this product. Please contact the vendor for more information."}</p>
+              {product.description ? (
+                <p className="text-gray-700">{product.description}</p>
+              ) : (
+                <p className="text-gray-500 italic">No description available for this product. Please contact the vendor for more information.</p>
+              )}
             </div>
             
-            {/* Quantity Selector */}
+            {/* Quantity Selector - Only show if in stock */}
             {product.stock > 0 && (
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-2">Quantity</h3>
@@ -437,7 +443,7 @@ function Product() {
                 }
               </button>
               
-              {/* Buy Now Button */}
+              {/* Buy Now Button - Disabled if out of stock */}
               <button 
                 onClick={handleBuyNow}
                 disabled={product.stock <= 0}
@@ -505,7 +511,9 @@ function Product() {
                 <div className="p-4">
                   <h3 className="font-medium text-gray-900 mb-1">{relatedProduct.name}</h3>
                   <div className="flex justify-between items-end">
-                    <p className="text-green-700 font-bold">${relatedProduct.price.toFixed(2)}</p>
+                    <p className="text-green-700 font-bold">
+                      ${typeof relatedProduct.price === 'number' ? relatedProduct.price.toFixed(2) : parseFloat(relatedProduct.price).toFixed(2)}
+                    </p>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

@@ -1,4 +1,4 @@
-// src/components/SearchFilter.jsx
+// src/components/SearchFilter.jsx - Fixed version
 import React, { useState, useEffect } from 'react';
 
 function SearchFilter({ onSearch, categories, initialFilters = {} }) {
@@ -7,6 +7,11 @@ function SearchFilter({ onSearch, categories, initialFilters = {} }) {
   const [priceRange, setPriceRange] = useState(initialFilters.priceRange || { min: '', max: '' });
   const [sortBy, setSortBy] = useState(initialFilters.sortBy || 'default');
   const [expanded, setExpanded] = useState(false);
+
+  // Apply initial filters on component mount
+  useEffect(() => {
+    handleFilterChange();
+  }, []);
 
   // Debounce search to avoid too many filter operations while typing
   useEffect(() => {

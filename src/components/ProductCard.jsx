@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
-function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock = 10, prodDescription = "", active = true }) {
+function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock = 0, prodDescription = "", active = true }) {
     const { cartItems, setCartItems } = useCart();
     const { wishlistItems, toggleWishlistItem } = useWishlist();
 
@@ -119,13 +119,15 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                     <div className="flex items-center justify-between mt-auto">
                         <div>
                             <p className='font-semibold text-green-600 text-lg'>
-                                ${prodPrice ? prodPrice.toFixed(2) : '0.00'}
+                                ${typeof prodPrice === 'number' ? prodPrice.toFixed(2) : parseFloat(prodPrice).toFixed(2)}
                             </p>
                             
-                            {/* Improved stock display */}
-                            <p className="text-xs text-gray-600">
-                                {prodStock > 0 ? `In stock: ${prodStock} left` : 'Out of stock'}
-                            </p>
+                            {/* Only show stock info if product is in stock */}
+                            {prodStock > 0 && (
+                                <p className="text-xs text-gray-600">
+                                    In stock: {prodStock} left
+                                </p>
+                            )}
 
                             {prodRating && (
                                 <div className="flex items-center">
