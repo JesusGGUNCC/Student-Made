@@ -36,33 +36,33 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
     const handleAddToCart = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        
+
         // Don't add if out of stock
         if (normalizedStock <= 0) return;
-        
+
         // Check if item already in cart
         const existingItem = cartItems.find(item => item.id === id);
-        
+
         if (existingItem) {
-          // Increase quantity up to available stock
-          if (existingItem.quantity < normalizedStock) {
-            setCartItems(cartItems.map(item => 
-              item.id === id 
-                ? { ...item, quantity: item.quantity + 1 } 
-                : item
-            ));
-          }
+            // Increase quantity up to available stock
+            if (existingItem.quantity < normalizedStock) {
+                setCartItems(cartItems.map(item =>
+                    item.id === id
+                        ? { ...item, quantity: item.quantity + 1 }
+                        : item
+                ));
+            }
         } else {
-          // Add new item to cart
-          setCartItems([...cartItems, { 
-            id, 
-            name: prodName, 
-            price: prodPrice,
-            image: prodImg,
-            quantity: 1,
-            stock: normalizedStock,
-            description: prodDescription
-          }]);
+            // Add new item to cart
+            setCartItems([...cartItems, {
+                id,
+                name: prodName,
+                price: prodPrice,
+                image: prodImg,
+                quantity: 1,
+                stock: normalizedStock,
+                description: prodDescription
+            }]);
         }
     };
 
@@ -99,8 +99,8 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                             }`}
                         aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill={isInWishlist ? "currentColor" : "none"} stroke="currentColor" strokeWidth={isInWishlist ? "0" : "2"}>
-                            <path fillRule="evenodd" d="M3.172 5.172a4.5 4.5 0 015.656 0L10 6.343l1.172-1.171a4.5 4.5 0 115.656 5.656L10 17.657l-6.828-6.829a4.5 4.5 0 010-5.656z" clipRule="evenodd" />
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill={isInWishlist ? "currentColor" : "none"} stroke="currentColor" strokeWidth={isInWishlist ? "0" : "1.5"}>
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                         </svg>
                     </button>
 
@@ -139,7 +139,7 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                             <p className='font-semibold text-green-600 text-lg'>
                                 ${typeof prodPrice === 'number' ? prodPrice.toFixed(2) : parseFloat(prodPrice).toFixed(2)}
                             </p>
-                            
+
                             {/* Only show stock info if product is in stock */}
                             {normalizedStock > 0 && (
                                 <p className="text-xs text-gray-600">
@@ -152,10 +152,10 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                             onClick={handleAddToCart}
                             disabled={normalizedStock <= 0 || isInCart}
                             className={`px-3 py-1 rounded-full text-sm font-medium ${normalizedStock <= 0
-                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                    : isInCart
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-green-500 text-white hover:bg-green-600'
+                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                : isInCart
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-green-500 text-white hover:bg-green-600'
                                 }`}
                         >
                             {normalizedStock <= 0

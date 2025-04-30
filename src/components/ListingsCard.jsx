@@ -18,29 +18,31 @@ function ListingsCard({
     // State to track if edit form is visible
     const [editTab, setEditTab] = useState(false);
 
-    // State to track product data
+    // State to track product data with proper initialization
     const [editProduct, setEditProduct] = useState({
-        name: name,
-        price: price,
-        image: image,
-        active: active,
-        stock: stock,
-        description: description,
-        category: category
+        name,
+        price,
+        image,
+        active,
+        stock,
+        description,
+        category
     });
 
+    // Update edit product state when props change
     useEffect(() => {
-        setEditProduct({
-            name: name,
-            price: price,
-            image: image,
-            active: active,
-            stock: stock,
-            description: description,
-            category: category
-        });
-
-    }, [name, price, image, active, stock, description, category]);
+        if (!editTab) {
+            setEditProduct({
+                name,
+                price,
+                image,
+                active,
+                stock,
+                description,
+                category
+            });
+        }
+    }, [name, price, image, active, stock, description, category, editTab]);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -73,6 +75,7 @@ function ListingsCard({
             onUpdate(id, updatedProduct);
         }
 
+        // Close edit mode only after successful update
         setEditTab(false);
     };
 
@@ -98,7 +101,7 @@ function ListingsCard({
     const placeholderImage = "/placeholder.jpg";
     const displayImage = image || placeholderImage;
 
-    // Conditional Rendering that shows form to edit changes for the listing component
+    // Render edit form
     if (editTab) {
         return (
             <div className="border rounded-lg overflow-hidden shadow-md w-full sm:max-w-sm lg:max-w-md">
@@ -120,7 +123,9 @@ function ListingsCard({
 
                         <div className="grid grid-cols-2 gap-2">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Price ($)
+                                </label>
                                 <input
                                     type="number"
                                     name='price'
@@ -135,7 +140,9 @@ function ListingsCard({
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Stock
+                                </label>
                                 <input
                                     type="number"
                                     name='stock'
@@ -150,7 +157,9 @@ function ListingsCard({
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Category
+                            </label>
                             <select
                                 name="category"
                                 value={editProduct.category}
@@ -172,7 +181,9 @@ function ListingsCard({
                         />
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Description
+                            </label>
                             <textarea
                                 name='description'
                                 value={editProduct.description}
@@ -232,7 +243,6 @@ function ListingsCard({
     // Listing Component - When not in edit mode
     return (
         <div className="border rounded-lg overflow-hidden shadow-md w-full sm:max-w-sm lg:max-w-md hover:shadow-lg transition-shadow">
-
             {/* Fixed height image container */}
             <div className="h-40 sm:h-48 bg-gray-200 relative">
                 {displayImage ? (
@@ -242,10 +252,7 @@ function ListingsCard({
                         className="h-full w-full object-cover"
                         onError={(e) => {
                             e.target.onerror = null;
-                            e.target.style.display = 'none';
-                            e.target.parentNode.innerHTML += `<div class="flex items-center justify-center h-full w-full bg-white">
-          <span class="text-gray-500 text-lg font-medium">No Image</span>
-        </div>`;
+                            e.target.src = placeholderImage;
                         }}
                     />
                 ) : (
