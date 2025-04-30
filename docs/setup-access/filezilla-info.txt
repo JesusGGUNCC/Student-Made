@@ -1,7 +1,0 @@
-FRONTEND:
---------
-/usr/share/nginx/html
-
-BACKEND:
---------
-/home/ec2-user/ecomm/backend
