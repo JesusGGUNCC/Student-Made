@@ -112,24 +112,24 @@ function VendorProfile() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-
+    
         try {
             // Validate form
             if (!newListing.name || !newListing.price || !newListing.description || !newListing.category) {
                 throw new Error('Please fill in all required fields');
             }
-
+    
             // Add vendor username
             const productData = {
-                ...updatedData,
+                ...newListing,  // Use newListing instead of updatedData
                 vendor_username: user.username,
                 // Ensure image is a valid string, not null or undefined
-                image: updatedData.image || ''
+                image: newListing.image || ''  // Use newListing instead of updatedData
             };
-
+    
             // Send to backend
             const response = await axios.post(API_URLS.addProduct, productData);
-
+    
             // Add to listings with the returned ID
             setListings([
                 ...listings,
@@ -138,7 +138,7 @@ function VendorProfile() {
                     id: response.data.product_id
                 }
             ]);
-
+    
             // Reset form and hide it
             setNewListing({
                 name: '',
@@ -154,7 +154,7 @@ function VendorProfile() {
         } catch (err) {
             setError(err.message || 'Failed to add product. Please try again.');
             console.error('Error adding product:', err);
-
+    
             // If no backend yet, just add to local state with mock ID
             if (!API_URLS.addProduct) {
                 const mockId = Math.floor(Math.random() * 10000);
@@ -287,31 +287,51 @@ function VendorProfile() {
     };
 
     const handleDeleteListing = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this product?')) {
-            return;
-        }
-
+        console.log('handleDeleteListing called with ID:', id);
+        
         try {
-            setLoading(true);
-
-            // Send delete request to backend
-            await axios.delete(`${API_URLS.deleteProduct}/${id}?username=${user.username}`);
-
-            // Update local state
-            setListings(listings.filter(listing => listing.id !== id));
-            setError(null);
+          console.log('Setting loading state to true');
+          setLoading(true);
+          
+          console.log('Making delete API call to:', `${API_URLS.deleteProduct}/${id}`);
+          console.log('With username param:', user.username);
+          
+          // Try the request with different formats to see which works
+          // Method 1: URL parameter
+          await axios.delete(`${API_URLS.deleteProduct}/${id}?username=${user.username}`);
+          
+          // If that fails, uncomment and try this alternative approach:
+          // Method 2: Using params object
+          /*
+          await axios.delete(`${API_URLS.deleteProduct}/${id}`, {
+            params: { username: user.username }
+          });
+          */
+          
+          console.log('Delete API call successful');
+          
+          // Update local state
+          setListings(listings.filter(listing => listing.id !== id));
+          setError(null);
+          console.log('Updated listings in state');
         } catch (err) {
-            console.error('Error deleting product:', err);
-            setError('Failed to delete product. Please try again.');
-
-            // If no backend yet, just update local state
-            if (!API_URLS.deleteProduct) {
-                setListings(listings.filter(listing => listing.id !== id));
-            }
+          console.error('Error details:', err);
+          
+          if (err.response) {
+            console.error('Response status:', err.response.status);
+            console.error('Response data:', err.response.data);
+          } else if (err.request) {
+            console.error('No response received from server');
+          } else {
+            console.error('Error message:', err.message);
+          }
+          
+          setError('Failed to delete product. Please check console for details.');
         } finally {
-            setLoading(false);
+          console.log('Setting loading state to false');
+          setLoading(false);
         }
-    };
+      };
 
     // Categories for the dropdown
     const productCategories = [

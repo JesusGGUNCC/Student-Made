@@ -106,10 +106,11 @@ function ListingsCard({
 
     // Handler for delete button
     const handleDelete = () => {
-        if (window.confirm('Are you sure you want to delete this product?')) {
-            onDelete(id);
-        }
-    };
+        console.log('Delete button clicked for product ID:', id);
+        // Bypass the confirmation dialog for testing
+        console.log('Calling onDelete with ID:', id);
+        onDelete(id);
+      };
 
     // Force the stock to be a number if it's a string
     const stockValue = typeof stock === 'string' ? parseInt(stock, 10) : stock;
