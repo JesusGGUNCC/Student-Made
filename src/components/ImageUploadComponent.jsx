@@ -1,4 +1,4 @@
-// src/components/ImageUploadComponent.jsx - Updated to use full URLs
+// src/components/ImageUploadComponent.jsx - Updated with "No Image" placeholder
 import React, { useState } from 'react';
 import axios from 'axios';
 import { API_URLS } from '../common/urls';
@@ -101,6 +101,15 @@ function ImageUploadComponent({ onImageUploaded, currentImage }) {
     }
   };
 
+  // Render a "No Image" placeholder when no image is available
+  const renderNoImagePlaceholder = () => {
+    return (
+      <div className="flex items-center justify-center h-full w-full bg-white border rounded-md">
+        <span className="text-gray-500 text-lg font-medium">No Image</span>
+      </div>
+    );
+  };
+
   return (
     <div className="mb-4">
       <div className="flex justify-between items-center mb-2">
@@ -117,21 +126,23 @@ function ImageUploadComponent({ onImageUploaded, currentImage }) {
       </div>
       
       {/* Preview area */}
-      {previewUrl && (
-        <div className="mb-3 h-48 w-full">
+      <div className="mb-3 h-48 w-full">
+        {previewUrl ? (
           <img 
             src={previewUrl} 
             alt="Preview" 
             className="h-full w-full object-contain border rounded-md"
             onError={() => {
-              setPreviewUrl('/placeholder.jpg');
               if (useUrlInput) {
                 setUploadError('Unable to load image from URL. Please check the URL or try a different one.');
               }
+              setPreviewUrl('');
             }} 
           />
-        </div>
-      )}
+        ) : (
+          renderNoImagePlaceholder()
+        )}
+      </div>
       
       {useUrlInput ? (
         // URL input field

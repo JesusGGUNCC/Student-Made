@@ -3,21 +3,21 @@ import axios from 'axios';
 import { API_URLS } from '../common/urls';
 import ImageUploadComponent from './ImageUploadComponent';
 
-function ListingsCard({ 
-  id, 
-  name = "Product Name", 
-  price = 99.99, 
-  stock = 0,
-  image = "", 
-  active = true, 
-  description = "",
-  category = "",
-  onUpdate,
-  onDelete
+function ListingsCard({
+    id,
+    name = "Product Name",
+    price = 99.99,
+    stock = 0,
+    image = "",
+    active = true,
+    description = "",
+    category = "",
+    onUpdate,
+    onDelete
 }) {
     // State to track if edit form is visible
     const [editTab, setEditTab] = useState(false);
-    
+
     // State to track product data
     const [editProduct, setEditProduct] = useState({
         name: name,
@@ -46,9 +46,9 @@ function ListingsCard({
         const { name, value, type, checked } = e.target;
         setEditProduct({
             ...editProduct,
-            [name]: type === 'checkbox' ? checked : 
-                  (name === 'price' || name === 'stock') ? 
-                  parseFloat(value) || 0 : value
+            [name]: type === 'checkbox' ? checked :
+                (name === 'price' || name === 'stock') ?
+                    parseFloat(value) || 0 : value
         });
     };
 
@@ -69,7 +69,7 @@ function ListingsCard({
             image: editProduct.image || '' // Ensure image is at least an empty string
         };
 
-        if(onUpdate){
+        if (onUpdate) {
             onUpdate(id, updatedProduct);
         }
 
@@ -78,7 +78,7 @@ function ListingsCard({
 
     // Categories for dropdown
     const productCategories = [
-        "Jewelry", "Accessories", "Prints", "Technology", 
+        "Jewelry", "Accessories", "Prints", "Technology",
         "School Spirit", "Crochet", "Art", "Clothing", "Other"
     ];
 
@@ -107,7 +107,7 @@ function ListingsCard({
                     <form className='space-y-2' onSubmit={handleSubmit}>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                            <input 
+                            <input
                                 type="text"
                                 name='name'
                                 value={editProduct.name}
@@ -121,7 +121,7 @@ function ListingsCard({
                         <div className="grid grid-cols-2 gap-2">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
-                                <input 
+                                <input
                                     type="number"
                                     name='price'
                                     value={editProduct.price}
@@ -133,10 +133,10 @@ function ListingsCard({
                                     required
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
-                                <input 
+                                <input
                                     type="number"
                                     name='stock'
                                     value={editProduct.stock}
@@ -148,7 +148,7 @@ function ListingsCard({
                                 />
                             </div>
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                             <select
@@ -166,14 +166,14 @@ function ListingsCard({
                         </div>
 
                         {/* Image Upload Component */}
-                        <ImageUploadComponent 
+                        <ImageUploadComponent
                             onImageUploaded={handleImageUploaded}
                             currentImage={editProduct.image}
                         />
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <textarea 
+                            <textarea
                                 name='description'
                                 value={editProduct.description}
                                 onChange={handleInputChange}
@@ -185,7 +185,7 @@ function ListingsCard({
                         </div>
 
                         <div className='flex items-center pl-1'>
-                            <input 
+                            <input
                                 type="checkbox"
                                 id='active'
                                 name='active'
@@ -200,7 +200,7 @@ function ListingsCard({
 
                         <div className="flex justify-between mt-3">
                             <div className='space-x-2'>
-                                <button 
+                                <button
                                     type="submit"
                                     className="bg-green-600 text-white rounded-md text-base px-3 py-1 border hover:bg-green-700"
                                 >
@@ -232,18 +232,28 @@ function ListingsCard({
     // Listing Component - When not in edit mode
     return (
         <div className="border rounded-lg overflow-hidden shadow-md w-full sm:max-w-sm lg:max-w-md hover:shadow-lg transition-shadow">
+
             {/* Fixed height image container */}
             <div className="h-40 sm:h-48 bg-gray-200 relative">
-                <img 
-                    src={displayImage} 
-                    alt={name} 
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = placeholderImage;
-                    }}
-                />
-                
+                {displayImage ? (
+                    <img
+                        src={displayImage}
+                        alt={name}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = 'none';
+                            e.target.parentNode.innerHTML += `<div class="flex items-center justify-center h-full w-full bg-white">
+          <span class="text-gray-500 text-lg font-medium">No Image</span>
+        </div>`;
+                        }}
+                    />
+                ) : (
+                    <div className="flex items-center justify-center h-full w-full bg-white">
+                        <span className="text-gray-500 text-lg font-medium">No Image</span>
+                    </div>
+                )}
+
                 {/* Stock badge */}
                 {normalizedStock <= 0 && (
                     <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
@@ -264,31 +274,31 @@ function ListingsCard({
                         {category}
                     </span>
                 </div>
-                
+
                 <p className="text-gray-500 text-sm mb-2 line-clamp-2">{description}</p>
-                
+
                 <div className="flex justify-between items-center">
                     <p className="text-gray-800 font-medium">${typeof price === 'number' ? price.toFixed(2) : price}</p>
-                    
+
                     <div className="flex items-center">
                         <span className="text-sm mr-3">
                             {normalizedStock > 0 ? `In stock: ${normalizedStock}` : 'Out of stock'}
                         </span>
-                        
+
                         {/* Status indicator */}
                         <span className={`h-3 w-3 rounded-full ${active ? 'bg-green-500' : 'bg-gray-400'} mr-2`}></span>
                         <span className="text-xs">{active ? 'Active' : 'Inactive'}</span>
                     </div>
                 </div>
-                
+
                 <div className="flex justify-between mt-3 pt-3 border-t">
-                    <button 
+                    <button
                         className="text-blue-600 hover:text-blue-800 transition-colors"
                         onClick={() => setEditTab(true)}
                     >
                         Edit
                     </button>
-                    
+
                     <button
                         onClick={handleDelete}
                         className="text-red-600 hover:text-red-800 transition-colors"
