@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
+import axios from 'axios';
+import { API_URLS } from '../common/urls';
 
 function ListingsCard({ 
   id, 
   name = "Product Name", 
   price = 99.99, 
   stock = 0,
-  image = "/placeholder.jpg", 
+  image = "", 
   active = true, 
   description = "",
   category = "",
@@ -19,6 +21,7 @@ function ListingsCard({
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [imageError, setImageError] = useState("");
 
     // State to track product data
     const [editProduct, setEditProduct] = useState({
@@ -59,15 +62,18 @@ function ListingsCard({
         const file = e.target.files[0];
         if (!file) return;
         
+        // Reset previous errors
+        setImageError("");
+        
         // Check if file is an image
         if (!file.type.match('image.*')) {
-            alert('Please select an image file');
+            setImageError('Please select an image file');
             return;
         }
         
-        // Check file size (limit to 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            alert('Image size exceeds 5MB. Please choose a smaller image.');
+        // Check file size (limit to 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            setImageError('Image size exceeds 2MB. Please choose a smaller image.');
             return;
         }
         
@@ -86,29 +92,36 @@ function ListingsCard({
         if (!imageFile) return;
         
         setUploadingImage(true);
+        setImageError("");
         
         try {
-            // In a real application, you would send the image to a server
-            // For this example, we'll simulate an upload and just use the preview URL
-            
-            // Create form data
+            // Create form data for file upload
             const formData = new FormData();
             formData.append('image', imageFile);
             
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Set the image URL in the form
-            setEditProduct({
-                ...editProduct,
-                image: imagePreview
+            // Send the file to the backend
+            const response = await axios.post('/api/upload/image', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             });
             
-            // Clear file selection
-            setImageFile(null);
+            // Check if upload was successful
+            if (response.data.success) {
+                // Update the product with the new image URL
+                setEditProduct({
+                    ...editProduct,
+                    image: response.data.image_url
+                });
+                
+                // Clear file selection
+                setImageFile(null);
+            } else {
+                setImageError(response.data.error || 'Failed to upload image');
+            }
         } catch (error) {
             console.error('Error uploading image:', error);
-            alert('Failed to upload image. Please try again.');
+            setImageError(error.response?.data?.error || 'Failed to upload image. Please try again.');
         } finally {
             setUploadingImage(false);
         }
@@ -117,8 +130,14 @@ function ListingsCard({
     const handleSubmit = (e) => {
         e.preventDefault()
 
+        // Make sure image is a string and not null/undefined
+        const updatedProduct = {
+            ...editProduct,
+            image: editProduct.image || '' // Ensure image is at least an empty string
+        };
+
         if(onUpdate){
-            onUpdate(id, editProduct);
+            onUpdate(id, updatedProduct);
         }
 
         setEditTab(false);
@@ -142,6 +161,10 @@ function ListingsCard({
     // Default to 0 if it's NaN
     const normalizedStock = isNaN(stockValue) ? 0 : stockValue;
 
+    // Use a placeholder image if no image is available
+    const placeholderImage = "/placeholder.jpg";
+    const displayImage = image || placeholderImage;
+
     // Conditional Rendering that shows form to edit changes for the listing component
     if (editTab) {
         return (
@@ -149,12 +172,12 @@ function ListingsCard({
                 {/* Image Upload/Preview */}
                 <div className="h-40 sm:h-48 bg-gray-200 relative">
                     <img 
-                        src={imagePreview || editProduct.image} 
+                        src={imagePreview || editProduct.image || placeholderImage} 
                         alt={editProduct.name}
                         className="h-full w-full object-cover"
                         onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = "/placeholder.jpg";
+                            e.target.src = placeholderImage;
                         }}
                     />
                     
@@ -183,6 +206,13 @@ function ListingsCard({
                         )}
                     </div>
                 </div>
+
+                {/* Image error message */}
+                {imageError && (
+                    <div className="bg-red-50 text-red-700 p-2 text-sm">
+                        {imageError}
+                    </div>
+                )}
 
                 <div className="p-3 sm:p-4">
                     {/* Form to edit changes */}
@@ -248,19 +278,6 @@ function ListingsCard({
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL (Optional)</label>
-                            <input 
-                                type="text"
-                                name='image'
-                                value={editProduct.image}
-                                onChange={handleInputChange}
-                                className='w-full px-3 py-1 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700'
-                                placeholder="Image URL or upload an image above"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">You can either upload an image or provide a URL</p>
-                        </div>
-                        
-                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                             <textarea 
                                 name='description'
@@ -321,15 +338,15 @@ function ListingsCard({
     // Listing Component - When not in edit mode
     return (
         <div className="border rounded-lg overflow-hidden shadow-md w-full sm:max-w-sm lg:max-w-md hover:shadow-lg transition-shadow">
-            {/* Place holder for Image */}
+            {/* Fixed height image container */}
             <div className="h-40 sm:h-48 bg-gray-200 relative">
                 <img 
-                    src={image} 
+                    src={displayImage} 
                     alt={name} 
                     className="h-full w-full object-cover"
                     onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = "/placeholder.jpg";
+                        e.target.src = placeholderImage;
                     }}
                 />
                 

@@ -226,63 +226,90 @@ function VendorProfile() {
     const handleUpdateListing = async (id, updatedData) => {
         try {
             setLoading(true);
-
+            
             // Make a copy of the data to avoid mutating the original
             const productData = {
                 ...updatedData,
                 vendor_username: user.username
             };
-
-            // Sanitize the image URL - ensure it's properly formatted or empty
-            if (productData.image) {
-                // If it's not a valid URL and not starting with '/', set to empty
-                if (!productData.image.startsWith('http') && !productData.image.startsWith('/')) {
-                    console.log('Fixing invalid image URL format');
-                    productData.image = '';
-                }
-            } else {
-                // Ensure image is an empty string, not null or undefined
+            
+            // Ensure image is a valid string, not null or undefined
+            if (productData.image === null || productData.image === undefined) {
                 productData.image = '';
             }
-
+    
             console.log('Sending product update with data:', productData);
-
+            
             // Send update to backend
             const response = await axios.put(`${API_URLS.updateProduct}/${id}`, productData);
-
+            
             // Update local state
-            const updatedListings = listings.map(listing =>
-                listing.id === id ? { ...listing, ...productData } : listing
+            const updatedListings = listings.map(listing => 
+                listing.id === id ? {...listing, ...productData } : listing
             );
             setListings(updatedListings);
             setError(null);
-
+            
             console.log('Product updated successfully:', response.data);
         } catch (err) {
             console.error('Error updating product:', err);
-
+            
             // More detailed error logging
             if (err.response) {
-                // The request was made and the server responded with a status code
-                // that falls out of the range of 2xx
                 console.error('Response data:', err.response.data);
                 console.error('Response status:', err.response.status);
-                setError(`Failed to update product: ${err.response.data.error || 'Server error'}`);
+                setError(`Failed to update product: ${err.response.data?.error || 'Server error'}`);
             } else if (err.request) {
-                // The request was made but no response was received
                 setError('Failed to update product: No response from server');
             } else {
-                // Something happened in setting up the request that triggered an Error
                 setError(`Failed to update product: ${err.message}`);
             }
+        } finally {
+            setLoading(false);
+        }
+    };
 
-            // If no backend yet, just update local state
-            if (!API_URLS.updateProduct) {
-                const updatedListings = listings.map(listing =>
-                    listing.id === id ? { ...listing, ...updatedData } : listing
-                );
-                setListings(updatedListings);
+    const uploadProductImage = async (file, productId) => {
+        try {
+            setLoading(true);
+            
+            // Create form data for file upload
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            // Send the file to the backend
+            const response = await axios.post('/api/upload/image', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
+            // Check if upload was successful
+            if (response.data.success) {
+                // Get the image URL from the response
+                const imageUrl = response.data.image_url;
+                
+                // Update the product with the new image URL
+                if (productId) {
+                    // Update existing product
+                    await handleUpdateListing(productId, { image: imageUrl });
+                } else {
+                    // For new product, update the form state
+                    setNewListing(prev => ({
+                        ...prev,
+                        image: imageUrl
+                    }));
+                }
+                
+                setError(null);
+                return imageUrl;
+            } else {
+                throw new Error(response.data.error || 'Failed to upload image');
             }
+        } catch (err) {
+            console.error('Error uploading product image:', err);
+            setError('Failed to upload image. Please try again or use a URL instead.');
+            return null;
         } finally {
             setLoading(false);
         }

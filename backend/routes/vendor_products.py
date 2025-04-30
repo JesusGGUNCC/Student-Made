@@ -1,9 +1,63 @@
 # backend/routes/vendor_products.py
+from flask import request, jsonify, current_app
 from app import app, db
+import os
+from werkzeug.utils import secure_filename
+import uuid
 from models.product import Product
 from models.user import User
 from models.vendor import Vendor
-from flask import request, jsonify
+
+# Configure upload folder
+UPLOAD_FOLDER = 'static/uploads/products'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+# Ensure upload directory exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Helper function to check if file extension is allowed
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Image upload endpoint
+@app.route('/api/upload/image', methods=['POST'])
+def upload_image():
+    try:
+        # Check if the post request has the file part
+        if 'image' not in request.files:
+            return jsonify({'error': 'No file part'}), 400
+            
+        file = request.files['image']
+        
+        # If user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+            
+        if file and allowed_file(file.filename):
+            # Generate unique filename to prevent overwrites
+            filename = secure_filename(file.filename)
+            unique_filename = f"{uuid.uuid4()}_{filename}"
+            
+            # Save the file
+            file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+            file.save(file_path)
+            
+            # Return the URL that can be used to access the file
+            image_url = f"/static/uploads/products/{unique_filename}"
+            
+            return jsonify({
+                'success': True,
+                'image_url': image_url
+            }), 200
+        else:
+            return jsonify({'error': 'File type not allowed'}), 400
+            
+    except Exception as e:
+        print(f"Error uploading image: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 
 # 🔍 Get vendor products
 @app.route("/api/vendor/products", methods=["GET"])
@@ -116,7 +170,7 @@ def update_vendor_product(product_id):
         
         # Check if the user is a vendor
         user = User.query.filter_by(username=username).first()
-        if not user or user.role != 'vendor':
+        if not user or (user.role != 'vendor' and user.role != 'admin'):
             return jsonify({"error": "User is not a vendor"}), 403
         
         # Get vendor ID
@@ -125,35 +179,50 @@ def update_vendor_product(product_id):
             return jsonify({"error": "Vendor profile not found"}), 404
         
         # Verify ownership
-        if product.vendor_id != vendor.id:
+        if product.vendor_id != vendor.id and user.role != 'admin':
             return jsonify({"error": "You don't have permission to update this product"}), 403
         
-        # Update product fields
-        if 'name' in data:
+        # Update product fields safely
+        if 'name' in data and data['name']:
             product.name = data['name']
-        if 'price' in data:
-            product.price = float(data['price'])
-        if 'description' in data:
-            product.description = data['description']
-        if 'category' in data:
-            product.category = data['category']
-        if 'image' in data:
-            product.image_url = data['image']
-        if 'stock' in data:
-            product.stock = int(data['stock'])
-        if 'active' in data:
-            product.active = data['active']
         
+        if 'price' in data and data['price'] is not None:
+            try:
+                product.price = float(data['price'])
+            except (ValueError, TypeError):
+                return jsonify({"error": "Invalid price format"}), 400
+        
+        if 'description' in data:
+            product.description = data['description'] or ''
+            
+        if 'category' in data:
+            product.category = data['category'] or ''
+            
+        if 'image' in data:
+            # Properly handle image URL - ensure it's a string
+            product.image_url = data['image'] or ''
+            
+        if 'stock' in data and data['stock'] is not None:
+            try:
+                product.stock = int(data['stock'])
+            except (ValueError, TypeError):
+                return jsonify({"error": "Invalid stock format"}), 400
+                
+        if 'active' in data:
+            product.active = bool(data['active'])
+        
+        # Save changes to database
         db.session.commit()
         
         return jsonify({
-            "message": "Product updated successfully"
+            "message": "Product updated successfully",
+            "product_id": product.id
         }), 200
     
     except Exception as e:
         db.session.rollback()
         print(f"Error updating product: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 # 🗑️ Delete a product
 @app.route("/api/vendor/product/<int:product_id>", methods=["DELETE"])

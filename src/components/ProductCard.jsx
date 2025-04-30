@@ -71,19 +71,26 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
     // Default to 0 if it's NaN
     const normalizedStock = isNaN(stockValue) ? 0 : stockValue;
 
+    // Use a placeholder image if no image is provided
+    const placeholderImage = "/placeholder.jpg";
+    const displayImage = prodImg || placeholderImage;
+
     return (
         <Link to={`/product/${id}`} className="block">
             <div className='flex flex-col w-full h-full rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300'>
                 <div className="relative">
-                    <img
-                        src={prodImg}
-                        alt={prodName}
-                        className='w-full h-64 object-cover rounded-t-2xl'
-                        onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = "/placeholder.jpg";
-                        }}
-                    />
+                    {/* Fixed height image container */}
+                    <div className="w-full h-64 overflow-hidden">
+                        <img
+                            src={displayImage}
+                            alt={prodName}
+                            className='w-full h-full object-cover rounded-t-2xl'
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = placeholderImage;
+                            }}
+                        />
+                    </div>
 
                     {/* Wishlist button */}
                     <button
@@ -111,14 +118,20 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                 </div>
 
                 <div className="p-4 flex-grow flex flex-col">
-                    <h3 className='text-lg font-semibold line-clamp-2 mb-1'>
-                        {prodName}
-                    </h3>
+                    {/* Fixed height title container to prevent shifting */}
+                    <div className="h-14">
+                        <h3 className='text-lg font-semibold line-clamp-2'>
+                            {prodName}
+                        </h3>
+                    </div>
 
+                    {/* Fixed height description container */}
                     {prodDescription && (
-                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                            {prodDescription}
-                        </p>
+                        <div className="h-10 mb-2">
+                            <p className="text-gray-600 text-sm line-clamp-2">
+                                {prodDescription}
+                            </p>
+                        </div>
                     )}
 
                     <div className="flex items-center justify-between mt-auto">
@@ -133,8 +146,6 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                                     In stock: {normalizedStock} left
                                 </p>
                             )}
-
-                  
                         </div>
 
                         <button
