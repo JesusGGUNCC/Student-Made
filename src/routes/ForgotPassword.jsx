@@ -18,8 +18,7 @@ const ForgotPassword = () => {
 
         try {
             const response = await axios.post(API_URLS.forgotPassword, { email });
-            setMessage(response.data.message);
-            setError('');
+           
             if (response.data.error) {
                 setError(response.data.error);
             } else {
@@ -28,11 +27,10 @@ const ForgotPassword = () => {
             
         } catch (err) {
             const errorMessage = err.response?.data?.error || err.message || "Failed to send reset link. Please try again later.";
-            setError(errorMessage)
-            setMessage(''); //Clearing previous message 
+            setError(errorMessage); 
             
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
         
     };
@@ -59,7 +57,7 @@ const ForgotPassword = () => {
                     )}
 
 
-                    {error && (<div className = "p-3 bg-red-50 text-red-700 rounded-mb">
+                    {error && (<div className = "p-3 bg-red-50 text-red-700 rounded-md">
                         {error}
                     </div>
                     

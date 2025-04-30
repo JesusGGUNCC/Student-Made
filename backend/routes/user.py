@@ -103,6 +103,7 @@ def forgot_password():
         return jsonify({"error": "Email is required"}), 400
     
     user = User.query.filter_by(email=email).first()
+
     if not user:
         return jsonify({"message" : "If an account exists with this email, a reset link has been sent"}), 200
     
@@ -128,16 +129,15 @@ def forgot_password():
         )
     
     try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as smtp:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as smtp:  
             smtp.starttls()
             smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             smtp.send_message(msg)
-
+        
         return jsonify({"message" : "Password reset link has been sent to your email"}), 200
     
     except Exception as e:
-        print(f"Error sending email: {str(e)}")
-        return jsonify({"error": "Failed to send email. Please try again later"})
+        return jsonify({"error": f"Failed to send email: {str(e)}"}), 500
     
     
 

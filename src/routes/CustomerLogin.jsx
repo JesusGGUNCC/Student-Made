@@ -41,7 +41,7 @@ function CustomerLogin() {
       
       if (response.data.message === "Login Successful") {
         login(usernameOrEmail, "customer");
-        setSuccessMessage("Login Sucessful!...")
+        setSuccessMessage("Login Successful!...")
 
         if (rememberMe) {
           localStorage.setItem("rememberUser", usernameOrEmail);
