@@ -1,4 +1,4 @@
-// src/components/ImageUploadComponent.jsx - Updated with "No Image" placeholder
+// src/components/ImageUploadComponent.jsx - Updated with success message
 import React, { useState } from 'react';
 import axios from 'axios';
 import { API_URLS } from '../common/urls';
@@ -8,6 +8,7 @@ function ImageUploadComponent({ onImageUploaded, currentImage }) {
   const [previewUrl, setPreviewUrl] = useState(currentImage || '');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const [imageUrl, setImageUrl] = useState(currentImage || '');
   const [useUrlInput, setUseUrlInput] = useState(!currentImage);
 
@@ -16,8 +17,9 @@ function ImageUploadComponent({ onImageUploaded, currentImage }) {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Reset errors
+    // Reset messages
     setUploadError('');
+    setUploadSuccess(false);
     
     // Basic validation
     if (!file.type.match('image.*')) {
@@ -41,6 +43,7 @@ function ImageUploadComponent({ onImageUploaded, currentImage }) {
   const handleUrlChange = (e) => {
     setImageUrl(e.target.value);
     setPreviewUrl(e.target.value);
+    setUploadSuccess(false);
   };
 
   // Handle upload
@@ -48,6 +51,7 @@ function ImageUploadComponent({ onImageUploaded, currentImage }) {
     if (useUrlInput) {
       // If using URL input, just pass the URL back
       onImageUploaded(imageUrl);
+      setUploadSuccess(true);
       return;
     }
     
@@ -58,6 +62,7 @@ function ImageUploadComponent({ onImageUploaded, currentImage }) {
     
     setIsUploading(true);
     setUploadError('');
+    setUploadSuccess(false);
     
     try {
       // Create form data for file upload
@@ -79,6 +84,7 @@ function ImageUploadComponent({ onImageUploaded, currentImage }) {
         // Call callback with the image URL
         onImageUploaded(fullImageUrl);
         setImageUrl(fullImageUrl);
+        setUploadSuccess(true);
       } else {
         throw new Error(response.data?.error || 'Failed to upload image');
       }
@@ -99,6 +105,7 @@ function ImageUploadComponent({ onImageUploaded, currentImage }) {
       setSelectedFile(null);
       setPreviewUrl(currentImage || '');
     }
+    setUploadSuccess(false);
   };
 
   // Render a "No Image" placeholder when no image is available
@@ -154,6 +161,13 @@ function ImageUploadComponent({ onImageUploaded, currentImage }) {
             placeholder="Enter image URL (https://...)"
             className="w-full px-3 py-2 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700"
           />
+          <button
+            type="button"
+            onClick={handleUpload}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Set Image URL
+          </button>
         </div>
       ) : (
         // File input and upload button
@@ -195,6 +209,15 @@ function ImageUploadComponent({ onImageUploaded, currentImage }) {
       
       {uploadError && (
         <p className="mt-2 text-sm text-red-600">{uploadError}</p>
+      )}
+
+      {uploadSuccess && (
+        <div className="mt-2 text-sm text-green-600 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          Image uploaded successfully!
+        </div>
       )}
     </div>
   );

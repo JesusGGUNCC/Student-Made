@@ -21,7 +21,7 @@ function ListingsCard({
     // Define placeholderImage here, before any other references
     const placeholderImage = "/placeholder.jpg";
     
-    // Use a properly initialized image variable
+    // Use a properly initialized image variable 
     const displayImage = image && image !== "" ? image : placeholderImage;
 
     // State to track product data with proper initialization
@@ -49,29 +49,6 @@ function ListingsCard({
             });
         }
     }, [name, price, image, active, stock, description, category, editTab]);
-
-    useEffect(() => {
-        console.log("Image URL when component renders:", image);
-        console.log("Display image being used:", displayImage);
-    }, [image, displayImage]);
-
-
-    const handleImageError = (e) => {
-        console.log("Image error occurred, current src:", e.target.src);
-        e.target.onerror = null; // Prevent infinite loop
-        e.target.src = placeholderImage;
-        console.log("Set src to placeholder:", placeholderImage);
-    };
-
-    const handleInputChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setEditProduct({
-            ...editProduct,
-            [name]: type === 'checkbox' ? checked :
-                (name === 'price' || name === 'stock') ?
-                    parseFloat(value) || 0 : value
-        });
-    };
 
     // Handle image upload for product editing
     const handleImageUploaded = (imageUrl) => {
@@ -106,17 +83,26 @@ function ListingsCard({
 
     // Handler for delete button
     const handleDelete = () => {
-        console.log('Delete button clicked for product ID:', id);
-        // Bypass the confirmation dialog for testing
-        console.log('Calling onDelete with ID:', id);
-        onDelete(id);
-      };
+        if (window.confirm('Are you sure you want to delete this product?')) {
+            console.log('Deleting product with ID:', id);
+            onDelete(id);
+        }
+    };
 
     // Force the stock to be a number if it's a string
     const stockValue = typeof stock === 'string' ? parseInt(stock, 10) : stock;
     // Default to 0 if it's NaN
     const normalizedStock = isNaN(stockValue) ? 0 : stockValue;
 
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setEditProduct({
+            ...editProduct,
+            [name]: type === 'checkbox' ? checked :
+                (name === 'price' || name === 'stock') ?
+                    parseFloat(value) || 0 : value
+        });
+    };
 
     // Render edit form
     if (editTab) {
@@ -268,8 +254,10 @@ function ListingsCard({
                         alt={name}
                         className="h-full w-full object-cover"
                         onError={(e) => {
-                            if (e.target.src !== '/placeholder.jpg') {
-                                e.target.src = '/placeholder.jpg';
+                            console.log("Image error occurred:", e);
+                            if (e.target.src !== placeholderImage) {
+                                console.log("Replacing with placeholder");
+                                e.target.src = placeholderImage;
                                 e.target.onerror = null; // Prevent error loop
                             }
                         }}
