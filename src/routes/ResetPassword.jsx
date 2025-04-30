@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { API_URLS } from '../common/urls';
 
 const ResetPassword = () => {
     const [searchParams] = useSearchParams();
@@ -17,7 +18,7 @@ const ResetPassword = () => {
         // Validate token when component mounts
         const validateToken = async () => {
             try {
-                const response = await axios.post('http://localhost:5000/validate-reset-token', { token });
+                const response = await axios.post(API_URLS.validateResetToken, { token });
                 setTokenValid(response.data.valid);
                 if (!response.data.valid) {
                     setError("Invalid or expired reset link");
@@ -51,7 +52,7 @@ const ResetPassword = () => {
 
 
         try {
-            const response = await axios.post('http://localhost:5000/resetPassword', {
+            const response = await axios.post(API_URLS.resetPassword, {
                 token,
                 password
             });

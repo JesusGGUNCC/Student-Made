@@ -24,13 +24,11 @@ dist-ssr
 *.sln
 *.sw?
 
-.env
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.sqlite
-*.env
 venv/
 env/
 .DS_Store

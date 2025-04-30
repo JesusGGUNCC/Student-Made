@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useCart } from '../context/CartContext';
 import { Country, State } from 'country-state-city';
 import { useNavigate } from 'react-router-dom';
-
+import VendorApplicationStatus from '../components/VendorApplicationStatus';
 import PaymentCard from '../components/PaymentCard';
 
 function BuyerProfile() {
@@ -257,6 +257,8 @@ function BuyerProfile() {
 	return (
 		<div className="w-full mb-15 mx-15">
 			<p className="text-4xl font-bold my-15 place-self-center">Profile</p>
+
+      <VendorApplicationStatus />
 
 			{/* Left Side - Forms */}
 			<div className="lg:w-2/3 space-y-8">
