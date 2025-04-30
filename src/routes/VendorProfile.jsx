@@ -13,18 +13,18 @@ import ListingsCard from '../components/ListingsCard';
 function VendorProfile() {
     const navigate = useNavigate();
     const { isLoggedIn, user, userRole } = useContext(AuthContext);
-    
+
     // Redirect if not logged in or not a vendor
     useEffect(() => {
         if (!isLoggedIn) {
             navigate('/login?redirect=vendor-profile');
             return;
         }
-        
+
         // Check if user is a vendor or has a pending application
         // This will be handled by the VendorApplicationStatus component
     }, [isLoggedIn, navigate]);
-    
+
     // State to track active tab
     const [activeTab, setActiveTab] = useState('profile');
 
@@ -81,13 +81,13 @@ function VendorProfile() {
     // ---- Profile Tab State Management (from BuyerProfile) ----
     const [deliveryOption, setDeliveryOption] = useState('shipping');
     const [billingAddressSameAsShipping, setBillingAddressSameAsShipping] = useState(true);
-    
+
     const handleListingInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         setNewListing({
             ...newListing,
-            [name]: type === 'checkbox' 
-                ? checked 
+            [name]: type === 'checkbox'
+                ? checked
                 : name === 'price' || name === 'stock'
                     ? parseFloat(value) || 0
                     : value
@@ -97,22 +97,22 @@ function VendorProfile() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        
+
         try {
             // Validate form
             if (!newListing.name || !newListing.price || !newListing.description || !newListing.category) {
                 throw new Error('Please fill in all required fields');
             }
-            
+
             // Add vendor username
             const productData = {
                 ...newListing,
                 vendor_username: user.username
             };
-            
+
             // Send to backend
             const response = await axios.post(API_URLS.addProduct, productData);
-            
+
             // Add to listings with the returned ID
             setListings([
                 ...listings,
@@ -121,7 +121,7 @@ function VendorProfile() {
                     id: response.data.product_id
                 }
             ]);
-            
+
             // Reset form and hide it
             setNewListing({
                 name: '',
@@ -137,7 +137,7 @@ function VendorProfile() {
         } catch (err) {
             setError(err.message || 'Failed to add product. Please try again.');
             console.error('Error adding product:', err);
-            
+
             // If no backend yet, just add to local state with mock ID
             if (!API_URLS.addProduct) {
                 const mockId = Math.floor(Math.random() * 10000);
@@ -167,7 +167,7 @@ function VendorProfile() {
     const handleBulkImport = async () => {
         try {
             setLoading(true);
-            
+
             // Parse the bulk import text (CSV or JSON format)
             let productsToAdd = [];
             try {
@@ -177,13 +177,13 @@ function VendorProfile() {
                 // If not JSON, try to parse as CSV
                 const lines = bulkProductsText.split('\n');
                 const headers = lines[0].split(',').map(h => h.trim());
-                
+
                 for (let i = 1; i < lines.length; i++) {
                     if (!lines[i].trim()) continue;
-                    
+
                     const values = lines[i].split(',').map(v => v.trim());
                     const product = {};
-                    
+
                     headers.forEach((header, index) => {
                         if (header === 'price' || header === 'stock') {
                             product[header] = parseFloat(values[index]) || 0;
@@ -193,23 +193,23 @@ function VendorProfile() {
                             product[header] = values[index];
                         }
                     });
-                    
+
                     productsToAdd.push(product);
                 }
             }
-            
+
             // Add vendor username to each product
             productsToAdd = productsToAdd.map(product => ({
                 ...product,
                 vendor_username: user.username
             }));
-            
+
             // Send to backend
             const response = await axios.post(API_URLS.bulkAddProducts, { products: productsToAdd });
-            
+
             // Update listings with new products
             fetchVendorProducts();
-            
+
             // Reset form
             setBulkProductsText('');
             setBulkImportMode(false);
@@ -222,30 +222,64 @@ function VendorProfile() {
         }
     };
 
+    // Updated handleUpdateListing function with improved error handling and image processing
     const handleUpdateListing = async (id, updatedData) => {
         try {
             setLoading(true);
-            
-            // Send update to backend
-            await axios.put(`${API_URLS.updateProduct}/${id}`, {
+
+            // Make a copy of the data to avoid mutating the original
+            const productData = {
                 ...updatedData,
                 vendor_username: user.username
-            });
-            
+            };
+
+            // Sanitize the image URL - ensure it's properly formatted or empty
+            if (productData.image) {
+                // If it's not a valid URL and not starting with '/', set to empty
+                if (!productData.image.startsWith('http') && !productData.image.startsWith('/')) {
+                    console.log('Fixing invalid image URL format');
+                    productData.image = '';
+                }
+            } else {
+                // Ensure image is an empty string, not null or undefined
+                productData.image = '';
+            }
+
+            console.log('Sending product update with data:', productData);
+
+            // Send update to backend
+            const response = await axios.put(`${API_URLS.updateProduct}/${id}`, productData);
+
             // Update local state
-            const updatedListings = listings.map(listing => 
-                listing.id === id ? {...listing, ...updatedData } : listing
+            const updatedListings = listings.map(listing =>
+                listing.id === id ? { ...listing, ...productData } : listing
             );
             setListings(updatedListings);
             setError(null);
+
+            console.log('Product updated successfully:', response.data);
         } catch (err) {
             console.error('Error updating product:', err);
-            setError('Failed to update product. Please try again.');
-            
+
+            // More detailed error logging
+            if (err.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                console.error('Response data:', err.response.data);
+                console.error('Response status:', err.response.status);
+                setError(`Failed to update product: ${err.response.data.error || 'Server error'}`);
+            } else if (err.request) {
+                // The request was made but no response was received
+                setError('Failed to update product: No response from server');
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                setError(`Failed to update product: ${err.message}`);
+            }
+
             // If no backend yet, just update local state
             if (!API_URLS.updateProduct) {
-                const updatedListings = listings.map(listing => 
-                    listing.id === id ? {...listing, ...updatedData } : listing
+                const updatedListings = listings.map(listing =>
+                    listing.id === id ? { ...listing, ...updatedData } : listing
                 );
                 setListings(updatedListings);
             }
@@ -258,20 +292,20 @@ function VendorProfile() {
         if (!window.confirm('Are you sure you want to delete this product?')) {
             return;
         }
-        
+
         try {
             setLoading(true);
-            
+
             // Send delete request to backend
             await axios.delete(`${API_URLS.deleteProduct}/${id}`);
-            
+
             // Update local state
             setListings(listings.filter(listing => listing.id !== id));
             setError(null);
         } catch (err) {
             console.error('Error deleting product:', err);
             setError('Failed to delete product. Please try again.');
-            
+
             // If no backend yet, just update local state
             if (!API_URLS.deleteProduct) {
                 setListings(listings.filter(listing => listing.id !== id));
@@ -283,7 +317,7 @@ function VendorProfile() {
 
     // Categories for the dropdown
     const productCategories = [
-        "Jewelry", "Accessories", "Prints", "Technology", 
+        "Jewelry", "Accessories", "Prints", "Technology",
         "School Spirit", "Crochet", "Art", "Clothing", "Other"
     ];
 
@@ -291,22 +325,22 @@ function VendorProfile() {
         <div className="container mx-auto px-4 py-8">
             {/* Vendor Application Status */}
             <VendorApplicationStatus />
-            
+
             {/* Tabs Navigation */}
             <div className="flex border-b mb-10">
-                <button 
+                <button
                     className={`py-3 px-6 font-medium text-lg ${activeTab === 'profile' ? 'border-b-2 border-green-700 text-green-700' : 'text-gray-500'}`}
                     onClick={() => setActiveTab('profile')}
                 >
                     Profile
                 </button>
-                <button 
+                <button
                     className={`py-3 px-6 font-medium text-lg ${activeTab === 'listings' ? 'border-b-2 border-green-700 text-green-700' : 'text-gray-500'}`}
                     onClick={() => setActiveTab('listings')}
                 >
                     My Products
                 </button>
-                <button 
+                <button
                     className={`py-3 px-6 font-medium text-lg ${activeTab === 'orders' ? 'border-b-2 border-green-700 text-green-700' : 'text-gray-500'}`}
                     onClick={() => setActiveTab('orders')}
                 >
@@ -331,7 +365,7 @@ function VendorProfile() {
                     <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8">
                         <p className="text-4xl font-bold mb-4 md:mb-0">My Products</p>
                         <div className="flex flex-col sm:flex-row gap-3">
-                            <button 
+                            <button
                                 className="bg-green-600 rounded-md text-white py-2 px-4 text-base sm:text-lg hover:bg-green-700 transition-colors"
                                 onClick={() => {
                                     setShowAddForm(true);
@@ -340,7 +374,7 @@ function VendorProfile() {
                             >
                                 + Add New Product
                             </button>
-                            <button 
+                            <button
                                 className="border border-green-600 text-green-700 rounded-md py-2 px-4 text-base sm:text-lg hover:bg-green-50 transition-colors"
                                 onClick={() => {
                                     setShowAddForm(true);
@@ -351,26 +385,26 @@ function VendorProfile() {
                             </button>
                         </div>
                     </div>
-                    
+
                     {error && (
                         <div className="bg-red-50 text-red-700 p-4 rounded-md mb-6">
                             {error}
                         </div>
                     )}
-                    
+
                     {/* Add Product Form */}
                     {showAddForm && !bulkImportMode && (
                         <div className="bg-gray-50 p-6 mb-8 rounded-lg border">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-2xl font-semibold">Add New Product</h3>
-                                <button 
+                                <button
                                     className="text-gray-500 hover:text-gray-700"
                                     onClick={() => setShowAddForm(false)}
                                 >
                                     ✕
                                 </button>
                             </div>
-                            
+
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -386,7 +420,7 @@ function VendorProfile() {
                                             required
                                         />
                                     </div>
-                                    
+
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             Category <span className="text-red-500">*</span>
@@ -404,7 +438,7 @@ function VendorProfile() {
                                             ))}
                                         </select>
                                     </div>
-                                    
+
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             Price ($) <span className="text-red-500">*</span>
@@ -420,7 +454,7 @@ function VendorProfile() {
                                             required
                                         />
                                     </div>
-                                    
+
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             Stock Quantity <span className="text-red-500">*</span>
@@ -436,7 +470,7 @@ function VendorProfile() {
                                         />
                                     </div>
                                 </div>
-                                
+
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Image URL
@@ -465,7 +499,7 @@ function VendorProfile() {
                                         required
                                     ></textarea>
                                 </div>
-                                
+
                                 <div className="flex items-center">
                                     <input
                                         type="checkbox"
@@ -479,7 +513,7 @@ function VendorProfile() {
                                         List as active (visible to customers)
                                     </label>
                                 </div>
-                                
+
                                 <div className="flex justify-end space-x-3 pt-4">
                                     <button
                                         type="button"
@@ -500,20 +534,20 @@ function VendorProfile() {
                             </form>
                         </div>
                     )}
-                    
+
                     {/* Bulk Import Form */}
                     {showAddForm && bulkImportMode && (
                         <div className="bg-gray-50 p-6 mb-8 rounded-lg border">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-2xl font-semibold">Bulk Import Products</h3>
-                                <button 
+                                <button
                                     className="text-gray-500 hover:text-gray-700"
                                     onClick={() => setShowAddForm(false)}
                                 >
                                     ✕
                                 </button>
                             </div>
-                            
+
                             <div className="mb-4">
                                 <p className="text-gray-700 mb-2">
                                     Import multiple products at once by pasting JSON or CSV data.
@@ -521,11 +555,11 @@ function VendorProfile() {
                                 <p className="text-sm text-gray-600 mb-4">
                                     Format should include: name, price, stock, description, category, and optionally image and active status.
                                 </p>
-                                
+
                                 <div className="bg-gray-100 p-3 rounded-md mb-4 text-xs font-mono overflow-x-auto">
                                     <p>Example JSON format:</p>
                                     <pre>
-{`[
+                                        {`[
   {
     "name": "Product Name",
     "price": 19.99,
@@ -540,12 +574,12 @@ function VendorProfile() {
                                     </pre>
                                     <p className="mt-2">Example CSV format:</p>
                                     <pre>
-{`name,price,stock,description,category,image,active
+                                        {`name,price,stock,description,category,image,active
 Product Name,19.99,10,Product description,Jewelry,https://example.com/image.jpg,true
 ...`}
                                     </pre>
                                 </div>
-                                
+
                                 <textarea
                                     value={bulkProductsText}
                                     onChange={(e) => setBulkProductsText(e.target.value)}
@@ -555,7 +589,7 @@ Product Name,19.99,10,Product description,Jewelry,https://example.com/image.jpg,
                                     required
                                 ></textarea>
                             </div>
-                            
+
                             <div className="flex justify-end space-x-3">
                                 <button
                                     type="button"
@@ -576,7 +610,7 @@ Product Name,19.99,10,Product description,Jewelry,https://example.com/image.jpg,
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Loading state */}
                     {loading && !showAddForm && (
                         <div className="text-center py-10">
@@ -587,7 +621,7 @@ Product Name,19.99,10,Product description,Jewelry,https://example.com/image.jpg,
                             <p className="mt-2 text-gray-600">Loading products...</p>
                         </div>
                     )}
-                    
+
                     {/* Container for Listings */}
                     {!loading && listings.length === 0 ? (
                         <div className="text-center py-12 bg-gray-50 rounded-lg">
@@ -606,7 +640,7 @@ Product Name,19.99,10,Product description,Jewelry,https://example.com/image.jpg,
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {/* Map through listings and render enhanced ListingsCard component */}
                             {!loading && listings.map(listing => (
-                                <ListingsCard 
+                                <ListingsCard
                                     key={listing.id}
                                     id={listing.id}
                                     name={listing.name}
