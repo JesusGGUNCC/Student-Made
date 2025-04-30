@@ -1,4 +1,4 @@
-// src/common/urls.jsx - Updated with all API endpoints including the image upload endpoint
+// src/common/urls.jsx - Updated with consistent endpoint definitions
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const API_URLS = {
@@ -46,11 +46,11 @@ export const API_URLS = {
   
   // Vendor product management endpoints
   vendorProducts: `${BASE_URL}/api/vendor/products`,
-  addProduct: `${BASE_URL}/api/vendor/add-product`,
+  // IMPORTANT: Use the correct endpoint that's actually registered on the server
+  addProduct: `${BASE_URL}/api/vendor/product`, // Changed from /api/vendor/add-product to /api/vendor/product
   updateProduct: `${BASE_URL}/api/vendor/product`,
   deleteProduct: `${BASE_URL}/api/vendor/product`,
   bulkAddProducts: `${BASE_URL}/api/vendor/products/bulk`,
-
   
   // Vendor endpoints
   vendorAll: `${BASE_URL}/api/vendor/all`,

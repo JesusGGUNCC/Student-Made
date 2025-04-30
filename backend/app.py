@@ -1,4 +1,4 @@
-# backend/app.py - Updated to include upload route blueprint
+# backend/app.py - Ensuring proper route registration
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -42,27 +42,28 @@ from models.vendor_application import VendorApplication
 with app.app_context():
     db.create_all()
 
-# ✅ Import all routes
+# ✅ Import routes in a specific order to ensure correct registration
+# First, import most basic routes
 from routes.user import *
 from routes.user_profile import *
 from routes.payment import *
-from routes.vendor import *
 from routes.product import *
 from routes.wishlist import *
 from routes.order import *
+
+# Then import vendor-related routes to ensure they have priority
 from routes.vendor_application import *
-from routes.vendor_products import *  # New vendor product management routes
+from routes.vendor_products import *  # Import this first for vendor product routes
+from routes.vendor import *  # Import this after to avoid overwriting routes
 
 # Import and register upload blueprint
 from routes.upload import upload_bp
 app.register_blueprint(upload_bp)
 
-
+# Print registered routes for debugging
 print("Registered routes:")
 for rule in app.url_map.iter_rules():
     print(f"{rule} - {rule.methods}")
-
-# Add any additional app settings or hook registrations here
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,6 +1,8 @@
+# backend/routes/vendor.py - Updated with proper imports
 from app import app, db
 from models.vendor import Vendor
 from models.product import Product
+from models.user import User  
 from flask import request, jsonify
 
 # 🔍 Get all vendors
@@ -64,7 +66,6 @@ def delete_vendor(vendor_id):
         return jsonify({"error": "Internal server error"}), 500
 
 
-
 # Register a new vendor
 @app.route("/api/vendor/register", methods=["POST"])
 def register_vendor():
@@ -91,65 +92,3 @@ def register_vendor():
         db.session.rollback()
         print(f"Error registering vendor: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
-
-
-# Add product for vendor
-# Add this to routes/vendor.py
-@app.route("/api/vendor/add-product", methods=["POST"])
-def add_new_vendor_product():
-    try:
-        # Get product data from request
-        data = request.get_json()
-        print(f"Received add product request with data: {data}")
-        
-        # Validate required fields
-        required_fields = ['name', 'price', 'vendor_username']
-        missing_fields = [field for field in required_fields if field not in data]
-        if missing_fields:
-            return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
-            
-        # Get vendor information
-        username = data.get('vendor_username')
-        user = User.query.filter_by(username=username).first()
-        
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-            
-        # Check user role
-        if user.role not in ['vendor', 'admin']:
-            return jsonify({"error": "User does not have vendor privileges"}), 403
-            
-        # Get vendor profile
-        vendor = Vendor.query.filter_by(email=user.email).first()
-        if not vendor:
-            return jsonify({"error": "Vendor profile not found"}), 404
-            
-        # Create new product
-        new_product = Product(
-            name=data.get('name'),
-            price=float(data.get('price')),
-            description=data.get('description', ''),
-            category=data.get('category', ''),
-            image_url=data.get('image') or None,
-            rating=0,  # New products start with no rating
-            stock=int(data.get('stock', 1)),
-            active=data.get('active', True),  # Default to active=True if not provided
-            vendor_id=vendor.id
-        )
-        
-        db.session.add(new_product)
-        db.session.commit()
-        
-        print(f"Product added successfully: {new_product.id}")
-        
-        return jsonify({
-            "message": "Product added successfully",
-            "product_id": new_product.id
-        }), 201
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error adding product: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": f"Error: {str(e)}"}), 500
