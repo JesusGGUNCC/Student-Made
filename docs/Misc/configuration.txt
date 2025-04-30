@@ -1,0 +1,2 @@
+see the .env file in the root for Frontend project
+see the .env file in the backend folder for Backend project

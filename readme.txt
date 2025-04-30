@@ -1,1 +1,2 @@
-See the docs folder
+See the docs folder.
+Start with Project-Structure.pptx under Misc folder.
