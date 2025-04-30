@@ -17,18 +17,12 @@ function ListingsCard({
 }) {
     // State to track if edit form is visible
     const [editTab, setEditTab] = useState(false);
-
-    // Define placeholderImage here, before any other references
-    const placeholderImage = "/placeholder.jpg";
     
-    // Use a properly initialized image variable
-    const displayImage = image && image !== "" ? image : placeholderImage;
-
     // State to track product data with proper initialization
     const [editProduct, setEditProduct] = useState({
         name,
         price,
-        image,
+        image: image || '',
         active,
         stock,
         description,
@@ -41,7 +35,7 @@ function ListingsCard({
             setEditProduct({
                 name,
                 price,
-                image: image || '',  // Ensure image is never undefined
+                image: image || '',
                 active,
                 stock,
                 description,
@@ -49,19 +43,6 @@ function ListingsCard({
             });
         }
     }, [name, price, image, active, stock, description, category, editTab]);
-
-    useEffect(() => {
-        console.log("Image URL when component renders:", image);
-        console.log("Display image being used:", displayImage);
-    }, [image, displayImage]);
-
-
-    const handleImageError = (e) => {
-        console.log("Image error occurred, current src:", e.target.src);
-        e.target.onerror = null; // Prevent infinite loop
-        e.target.src = placeholderImage;
-        console.log("Set src to placeholder:", placeholderImage);
-    };
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -75,6 +56,7 @@ function ListingsCard({
 
     // Handle image upload for product editing
     const handleImageUploaded = (imageUrl) => {
+        console.log("Image uploaded in ListingsCard:", imageUrl);
         setEditProduct({
             ...editProduct,
             image: imageUrl
@@ -84,17 +66,19 @@ function ListingsCard({
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Make sure image is a string and not null/undefined
+        // Ensure image is a string (not null/undefined)
         const updatedProduct = {
             ...editProduct,
-            image: editProduct.image || '' // Ensure image is at least an empty string
+            image: editProduct.image || '' 
         };
 
+        console.log("Submitting updated product with image:", updatedProduct.image);
+        
         if (onUpdate) {
             onUpdate(id, updatedProduct);
         }
 
-        // Close edit mode only after successful update
+        // Close edit mode
         setEditTab(false);
     };
 
@@ -106,17 +90,13 @@ function ListingsCard({
 
     // Handler for delete button
     const handleDelete = () => {
-        console.log('Delete button clicked for product ID:', id);
-        // Bypass the confirmation dialog for testing
-        console.log('Calling onDelete with ID:', id);
         onDelete(id);
-      };
+    };
 
     // Force the stock to be a number if it's a string
     const stockValue = typeof stock === 'string' ? parseInt(stock, 10) : stock;
     // Default to 0 if it's NaN
     const normalizedStock = isNaN(stockValue) ? 0 : stockValue;
-
 
     // Render edit form
     if (editTab) {
@@ -261,21 +241,28 @@ function ListingsCard({
     return (
         <div className="border rounded-lg overflow-hidden shadow-md w-full sm:max-w-sm lg:max-w-md hover:shadow-lg transition-shadow">
             {/* Fixed height image container */}
-            <div className="h-40 sm:h-48 bg-gray-200 relative">
-                {displayImage ? (
+            <div className="h-40 sm:h-48 bg-white relative">
+                {image && image.trim() !== "" ? (
                     <img
-                        src={displayImage}
+                        src={image}
                         alt={name}
                         className="h-full w-full object-cover"
                         onError={(e) => {
-                            if (e.target.src !== '/placeholder.jpg') {
-                                e.target.src = '/placeholder.jpg';
-                                e.target.onerror = null; // Prevent error loop
+                            // On error, replace with "No Image" text
+                            const parent = e.target.parentNode;
+                            e.target.style.display = 'none';
+                            
+                            // Check if we already added the no-image div
+                            if (!parent.querySelector('.no-image-text')) {
+                                const noImageDiv = document.createElement('div');
+                                noImageDiv.className = 'flex items-center justify-center h-full w-full bg-white no-image-text';
+                                noImageDiv.innerHTML = '<span class="text-gray-500 text-lg font-medium">No Image</span>';
+                                parent.appendChild(noImageDiv);
                             }
                         }}
                     />
                 ) : (
-                    <div className="flex items-center justify-center h-full w-full bg-white">
+                    <div className="flex items-center justify-center h-full w-full bg-white no-image-text">
                         <span className="text-gray-500 text-lg font-medium">No Image</span>
                     </div>
                 )}

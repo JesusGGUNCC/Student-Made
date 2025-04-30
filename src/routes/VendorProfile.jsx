@@ -58,24 +58,32 @@ function VendorProfile() {
     }, [activeTab, isLoggedIn, user]);
 
     // Fetch vendor products from backend
+    // Updated fetchVendorProducts function with better image handling
     const fetchVendorProducts = async () => {
         try {
             setLoading(true);
+            console.log("Fetching products for vendor:", user.username);
+
             const response = await axios.get(`${API_URLS.vendorProducts}?username=${user.username}`);
+
+            // Process response data to ensure image field is properly handled
             const processedProducts = response.data.map(product => ({
                 ...product,
-                image: product.image || '' // Ensure image is never null/undefined
+                // Ensure image field is never null or undefined
+                image: product.image_url || product.image || ''
             }));
-            setListings(response.data);
+
+            console.log("Received products:", processedProducts);
+            setListings(processedProducts);
             setError(null);
         } catch (err) {
             console.error('Error fetching vendor products:', err);
             setError('Failed to load your products. Please try again.');
-            // If no backend yet, use mock data
+            // If backend request fails, use mock data
             setListings([
-                { id: 1, name: "Handmade Bracelet", price: 29.99, stock: 5, image: "/placeholder.jpg", description: "Beautiful handcrafted bracelet", category: "Jewelry", active: true },
-                { id: 2, name: "Custom T-Shirt", price: 24.99, stock: 10, image: "/placeholder.jpg", description: "UNCC themed custom t-shirt", category: "Clothing", active: true },
-                { id: 3, name: "Digital Art Print", price: 15.99, stock: 0, image: "/placeholder.jpg", description: "Digital art print - Charlotte skyline", category: "Prints", active: false }
+                { id: 1, name: "Handmade Bracelet", price: 29.99, stock: 5, image: "", description: "Beautiful handcrafted bracelet", category: "Jewelry", active: true },
+                { id: 2, name: "Custom T-Shirt", price: 24.99, stock: 10, image: "", description: "UNCC themed custom t-shirt", category: "Clothing", active: true },
+                { id: 3, name: "Digital Art Print", price: 15.99, stock: 0, image: "", description: "Digital art print - Charlotte skyline", category: "Prints", active: false }
             ]);
         } finally {
             setLoading(false);
@@ -112,13 +120,13 @@ function VendorProfile() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-    
+
         try {
             // Validate form
             if (!newListing.name || !newListing.price || !newListing.description || !newListing.category) {
                 throw new Error('Please fill in all required fields');
             }
-    
+
             // Add vendor username
             const productData = {
                 ...newListing,  // Use newListing instead of updatedData
@@ -126,10 +134,10 @@ function VendorProfile() {
                 // Ensure image is a valid string, not null or undefined
                 image: newListing.image || ''  // Use newListing instead of updatedData
             };
-    
+
             // Send to backend
             const response = await axios.post(API_URLS.addProduct, productData);
-    
+
             // Add to listings with the returned ID
             setListings([
                 ...listings,
@@ -138,7 +146,7 @@ function VendorProfile() {
                     id: response.data.product_id
                 }
             ]);
-    
+
             // Reset form and hide it
             setNewListing({
                 name: '',
@@ -154,7 +162,7 @@ function VendorProfile() {
         } catch (err) {
             setError(err.message || 'Failed to add product. Please try again.');
             console.error('Error adding product:', err);
-    
+
             // If no backend yet, just add to local state with mock ID
             if (!API_URLS.addProduct) {
                 const mockId = Math.floor(Math.random() * 10000);
@@ -239,39 +247,36 @@ function VendorProfile() {
         }
     };
 
-    // Updated handleUpdateListing function with improved error handling and image processing
+    // Updated handleUpdateListing function with improved image handling
     const handleUpdateListing = async (id, updatedData) => {
         try {
             setLoading(true);
-            
+
             // Make a copy of the data to avoid mutating the original
             const productData = {
                 ...updatedData,
                 vendor_username: user.username
             };
-            
-            // Ensure image is a valid string, not null or undefined
-            if (productData.image === null || productData.image === undefined) {
-                productData.image = '';
-            }
-    
-            console.log('Sending product update with data:', productData);
-            
+
+            // Log the image URL being sent
+            console.log(`Updating product ${id} with image URL:`, productData.image);
+
             // Send update to backend
             const response = await axios.put(`${API_URLS.updateProduct}/${id}`, productData);
-            
-            // Update local state
-            const updatedListings = listings.map(listing => 
-                listing.id === id ? {...listing, ...productData } : listing
+
+            // Update local state with the exact same data sent to server
+            const updatedListings = listings.map(listing =>
+                listing.id === id ? { ...listing, ...productData } : listing
             );
+
             setListings(updatedListings);
             setError(null);
-            
+
             console.log('Product updated successfully:', response.data);
         } catch (err) {
             console.error('Error updating product:', err);
-            
-            // More detailed error logging
+
+            // Detailed error logging
             if (err.response) {
                 console.error('Response data:', err.response.data);
                 console.error('Response status:', err.response.status);
@@ -288,50 +293,50 @@ function VendorProfile() {
 
     const handleDeleteListing = async (id) => {
         console.log('handleDeleteListing called with ID:', id);
-        
+
         try {
-          console.log('Setting loading state to true');
-          setLoading(true);
-          
-          console.log('Making delete API call to:', `${API_URLS.deleteProduct}/${id}`);
-          console.log('With username param:', user.username);
-          
-          // Try the request with different formats to see which works
-          // Method 1: URL parameter
-          await axios.delete(`${API_URLS.deleteProduct}/${id}?username=${user.username}`);
-          
-          // If that fails, uncomment and try this alternative approach:
-          // Method 2: Using params object
-          /*
-          await axios.delete(`${API_URLS.deleteProduct}/${id}`, {
-            params: { username: user.username }
-          });
-          */
-          
-          console.log('Delete API call successful');
-          
-          // Update local state
-          setListings(listings.filter(listing => listing.id !== id));
-          setError(null);
-          console.log('Updated listings in state');
+            console.log('Setting loading state to true');
+            setLoading(true);
+
+            console.log('Making delete API call to:', `${API_URLS.deleteProduct}/${id}`);
+            console.log('With username param:', user.username);
+
+            // Try the request with different formats to see which works
+            // Method 1: URL parameter
+            await axios.delete(`${API_URLS.deleteProduct}/${id}?username=${user.username}`);
+
+            // If that fails, uncomment and try this alternative approach:
+            // Method 2: Using params object
+            /*
+            await axios.delete(`${API_URLS.deleteProduct}/${id}`, {
+              params: { username: user.username }
+            });
+            */
+
+            console.log('Delete API call successful');
+
+            // Update local state
+            setListings(listings.filter(listing => listing.id !== id));
+            setError(null);
+            console.log('Updated listings in state');
         } catch (err) {
-          console.error('Error details:', err);
-          
-          if (err.response) {
-            console.error('Response status:', err.response.status);
-            console.error('Response data:', err.response.data);
-          } else if (err.request) {
-            console.error('No response received from server');
-          } else {
-            console.error('Error message:', err.message);
-          }
-          
-          setError('Failed to delete product. Please check console for details.');
+            console.error('Error details:', err);
+
+            if (err.response) {
+                console.error('Response status:', err.response.status);
+                console.error('Response data:', err.response.data);
+            } else if (err.request) {
+                console.error('No response received from server');
+            } else {
+                console.error('Error message:', err.message);
+            }
+
+            setError('Failed to delete product. Please check console for details.');
         } finally {
-          console.log('Setting loading state to false');
-          setLoading(false);
+            console.log('Setting loading state to false');
+            setLoading(false);
         }
-      };
+    };
 
     // Categories for the dropdown
     const productCategories = [
@@ -490,7 +495,7 @@ function VendorProfile() {
                                 </div>
 
                                 {/* New Image Upload Component */}
-                                <ImageUploadComponent 
+                                <ImageUploadComponent
                                     onImageUploaded={handleImageUploaded}
                                     currentImage={newListing.image}
                                 />
