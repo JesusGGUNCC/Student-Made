@@ -1,4 +1,4 @@
-// src/routes/Product.jsx - Fixed version
+// Updated Product.jsx with fixed stock handling
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -141,13 +141,13 @@ function Product() {
   
   // Handle add to cart
   const handleAddToCart = () => {
-    if (!product || product.stock <= 0) return;
+    if (!product || normalizedStock <= 0) return;
     
     const existingItem = cartItems.find(item => item.id === product.id);
     
     if (existingItem) {
       // Increase quantity up to available stock
-      const newQuantity = Math.min(existingItem.quantity + quantity, product.stock);
+      const newQuantity = Math.min(existingItem.quantity + quantity, normalizedStock);
       
       setCartItems(cartItems.map(item => 
         item.id === product.id 
@@ -163,14 +163,14 @@ function Product() {
         image: product.image_url,
         quantity: quantity,
         description: product.description,
-        stock: product.stock
+        stock: normalizedStock
       }]);
     }
   };
   
   // Handle buy now
   const handleBuyNow = () => {
-    if (!product || product.stock <= 0) return;
+    if (!product || normalizedStock <= 0) return;
     
     handleAddToCart();
     
@@ -185,7 +185,7 @@ function Product() {
         image: product.image_url,
         quantity: quantity,
         description: product.description,
-        stock: product.stock
+        stock: normalizedStock
       }]));
       navigate('/login?redirect=checkout');
     }
@@ -193,7 +193,7 @@ function Product() {
   
   // Increase quantity
   const increaseQuantity = () => {
-    if (product && quantity < product.stock) {
+    if (product && quantity < normalizedStock) {
       setQuantity(quantity + 1);
     }
   };
@@ -244,6 +244,11 @@ function Product() {
       </div>
     );
   }
+  
+  // Ensure stock is a number
+  const stockValue = typeof product.stock === 'string' ? parseInt(product.stock, 10) : product.stock;
+  // Default to 0 if it's NaN
+  const normalizedStock = isNaN(stockValue) ? 0 : stockValue;
   
   // Create product images array with just the main image to avoid random placeholders
   const productImages = product.image_url ? [product.image_url] : ["/placeholder.jpg"];
@@ -316,37 +321,17 @@ function Product() {
                 ${typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price).toFixed(2)}
               </span>
               
-              {product.rating && (
-                <div className="flex items-center">
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
-                      <svg 
-                        key={i}
-                        xmlns="http://www.w3.org/2000/svg" 
-                        viewBox="0 0 20 20" 
-                        fill={i < Math.floor(product.rating) ? "currentColor" : "none"}
-                        stroke="currentColor"
-                        className="h-5 w-5"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <span className="text-gray-600 ml-2">
-                    {product.rating.toFixed(1)} ({Math.floor(product.rating * 10)} reviews)
-                  </span>
-                </div>
-              )}
+
             </div>
             
             {/* Stock Information */}
             <div className="mb-4 bg-gray-100 p-3 rounded-lg border border-gray-200">
-              {product.stock > 0 ? (
+              {normalizedStock > 0 ? (
                 <div className="flex items-center text-green-600">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="font-medium">In Stock: {product.stock} left</span>
+                  <span className="font-medium">In Stock: {normalizedStock} left</span>
                 </div>
               ) : (
                 <div className="flex items-center text-red-600">
@@ -382,7 +367,7 @@ function Product() {
             </div>
             
             {/* Quantity Selector - Only show if in stock */}
-            {product.stock > 0 && (
+            {normalizedStock > 0 && (
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-2">Quantity</h3>
                 <div className="flex items-center">
@@ -398,11 +383,11 @@ function Product() {
                   <input
                     type="number"
                     min="1"
-                    max={product.stock}
+                    max={normalizedStock}
                     value={quantity}
                     onChange={(e) => {
                       const value = parseInt(e.target.value);
-                      if (!isNaN(value) && value >= 1 && value <= product.stock) {
+                      if (!isNaN(value) && value >= 1 && value <= normalizedStock) {
                         setQuantity(value);
                       }
                     }}
@@ -411,7 +396,7 @@ function Product() {
                   <button 
                     onClick={increaseQuantity}
                     className="p-2 border rounded-r-md hover:bg-gray-100"
-                    disabled={quantity >= product.stock}
+                    disabled={quantity >= normalizedStock}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -426,16 +411,16 @@ function Product() {
               {/* Add to Cart Button */}
               <button 
                 onClick={handleAddToCart}
-                disabled={product.stock <= 0 || isInCart}
+                disabled={normalizedStock <= 0 || isInCart}
                 className={`flex-1 py-3 rounded-lg font-medium flex items-center justify-center ${
-                  product.stock <= 0 
+                  normalizedStock <= 0 
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                     : isInCart
                       ? 'bg-green-100 text-green-800 border border-green-600'
                       : 'bg-green-700 text-white hover:bg-green-800'
                 }`}
               >
-                {product.stock <= 0 
+                {normalizedStock <= 0 
                   ? 'Out of Stock' 
                   : isInCart 
                     ? 'Added to Cart'
@@ -446,9 +431,9 @@ function Product() {
               {/* Buy Now Button - Disabled if out of stock */}
               <button 
                 onClick={handleBuyNow}
-                disabled={product.stock <= 0}
+                disabled={normalizedStock <= 0}
                 className={`flex-1 py-3 rounded-lg font-medium ${
-                  product.stock <= 0 
+                  normalizedStock <= 0 
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                     : 'bg-black text-white hover:bg-gray-800'
                 }`}
