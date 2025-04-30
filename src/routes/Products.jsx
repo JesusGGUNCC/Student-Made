@@ -1,4 +1,4 @@
-// src/routes/Products.jsx - Updated with search functionality and fixes
+// src/routes/Products.jsx - Updated to properly filter inactive products
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import ProductCard from '../components/ProductCard';
@@ -33,7 +33,7 @@ function Products() {
         const activeProducts = data.filter(product => product.active !== false);
         
         setProducts(activeProducts);
-        setFilteredProducts(activeProducts); // Make sure this line is here to show products immediately
+        setFilteredProducts(activeProducts); // Initial filtered set is all active products
         
         // Extract unique categories
         const uniqueCategories = [...new Set(activeProducts.map(product => product.category).filter(Boolean))];
@@ -54,7 +54,8 @@ function Products() {
   const handleSearch = (filters) => {
     const { searchTerm, category, priceRange, sortBy } = filters;
     
-    let filtered = [...products];
+    // Always start with active products only
+    let filtered = [...products].filter(product => product.active !== false);
     
     // Apply search term filter
     if (searchTerm) {
@@ -99,21 +100,14 @@ function Products() {
         break;
     }
     
-    // Filter out products with stock <= 0 if requested
-    // Uncomment this if you want to hide out-of-stock products
-    // filtered = filtered.filter(product => product.stock > 0);
-    
     setFilteredProducts(filtered);
   };
 
   // Function to reset filters and show all products
   const resetFilters = () => {
-    handleSearch({
-      searchTerm: '',
-      category: '',
-      priceRange: { min: '', max: '' },
-      sortBy: 'default'
-    });
+    // Only show active products
+    const activeProducts = products.filter(product => product.active !== false);
+    setFilteredProducts(activeProducts);
   };
 
   return (
@@ -172,6 +166,7 @@ function Products() {
               prodPrice={product.price}
               prodStock={product.stock || 0} // Ensure stock is never undefined
               prodDescription={product.description || ''} // Ensure description is never undefined
+              active={product.active !== false} // Pass active status to ProductCard
             />
           ))}
         </div>

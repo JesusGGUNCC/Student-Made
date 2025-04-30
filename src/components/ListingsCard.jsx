@@ -15,6 +15,11 @@ function ListingsCard({
     // State to track if edit form is visible
     const [editTab, setEditTab] = useState(false);
 
+    // State for image upload
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [uploadingImage, setUploadingImage] = useState(false);
+
     // State to track product data
     const [editProduct, setEditProduct] = useState({
         name: name,
@@ -49,6 +54,66 @@ function ListingsCard({
         })
     };
 
+    // Handle image file selection
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // Check if file is an image
+        if (!file.type.match('image.*')) {
+            alert('Please select an image file');
+            return;
+        }
+        
+        // Check file size (limit to 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Image size exceeds 5MB. Please choose a smaller image.');
+            return;
+        }
+        
+        setImageFile(file);
+        
+        // Create image preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setImagePreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // Handle image upload
+    const handleImageUpload = async () => {
+        if (!imageFile) return;
+        
+        setUploadingImage(true);
+        
+        try {
+            // In a real application, you would send the image to a server
+            // For this example, we'll simulate an upload and just use the preview URL
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('image', imageFile);
+            
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Set the image URL in the form
+            setEditProduct({
+                ...editProduct,
+                image: imagePreview
+            });
+            
+            // Clear file selection
+            setImageFile(null);
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            alert('Failed to upload image. Please try again.');
+        } finally {
+            setUploadingImage(false);
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault()
 
@@ -76,19 +141,42 @@ function ListingsCard({
     if (editTab) {
         return (
             <div className="border rounded-lg overflow-hidden shadow-md w-full sm:max-w-sm lg:max-w-md">
-                {/* Place holder for Image */}
-                <div className="h-40 sm:h-48 bg-gray-200">
-                    {image && (
-                        <img 
-                            src={image} 
-                            alt={name} 
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = "/placeholder.jpg";
-                            }}
-                        />
-                    )}
+                {/* Image Upload/Preview */}
+                <div className="h-40 sm:h-48 bg-gray-200 relative">
+                    <img 
+                        src={imagePreview || editProduct.image} 
+                        alt={editProduct.name}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/placeholder.jpg";
+                        }}
+                    />
+                    
+                    {/* Image upload overlay */}
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white opacity-0 hover:opacity-100 transition-opacity">
+                        <label className="cursor-pointer bg-white text-gray-800 px-3 py-1 rounded-md hover:bg-gray-100 mb-2">
+                            Select Image
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={handleImageChange}
+                                disabled={uploadingImage}
+                            />
+                        </label>
+                        
+                        {imageFile && (
+                            <button
+                                type="button"
+                                onClick={handleImageUpload}
+                                disabled={uploadingImage}
+                                className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700"
+                            >
+                                {uploadingImage ? 'Uploading...' : 'Upload'}
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div className="p-3 sm:p-4">
@@ -102,7 +190,9 @@ function ListingsCard({
                                 value={editProduct.name}
                                 onChange={handleInputChange}
                                 className='w-full px-3 py-1 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700'
-                                placeholder="Product Name"/>
+                                placeholder="Product Name"
+                                required
+                            />
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
@@ -116,7 +206,9 @@ function ListingsCard({
                                     step="0.01"
                                     min="0"
                                     className='w-full px-3 py-1 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700'
-                                    placeholder="Price"/>
+                                    placeholder="Price"
+                                    required
+                                />
                             </div>
                             
                             <div>
@@ -128,7 +220,9 @@ function ListingsCard({
                                     onChange={handleInputChange}
                                     min="0"
                                     className='w-full px-3 py-1 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700'
-                                    placeholder="Quantity"/>
+                                    placeholder="Quantity"
+                                    required
+                                />
                             </div>
                         </div>
                         
@@ -139,6 +233,7 @@ function ListingsCard({
                                 value={editProduct.category}
                                 onChange={handleInputChange}
                                 className='w-full px-3 py-1 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700'
+                                required
                             >
                                 <option value="">Select Category</option>
                                 {productCategories.map(cat => (
@@ -148,14 +243,16 @@ function ListingsCard({
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL (Optional)</label>
                             <input 
                                 type="text"
                                 name='image'
                                 value={editProduct.image}
                                 onChange={handleInputChange}
                                 className='w-full px-3 py-1 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700'
-                                placeholder="Image URL"/>
+                                placeholder="Image URL or upload an image above"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">You can either upload an image or provide a URL</p>
                         </div>
                         
                         <div>
@@ -167,6 +264,7 @@ function ListingsCard({
                                 rows={3}
                                 className='w-full px-3 py-1 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-green-700'
                                 placeholder="Product description"
+                                required
                             />
                         </div>
 
@@ -180,7 +278,7 @@ function ListingsCard({
                                 className='h-4 w-4 rounded'
                             />
                             <label htmlFor="active" className='ml-2 block text-sm text-gray-700'>
-                                List as active
+                                List as active (visible to customers)
                             </label>
                         </div>
 
@@ -220,17 +318,15 @@ function ListingsCard({
         <div className="border rounded-lg overflow-hidden shadow-md w-full sm:max-w-sm lg:max-w-md hover:shadow-lg transition-shadow">
             {/* Place holder for Image */}
             <div className="h-40 sm:h-48 bg-gray-200 relative">
-                {image && (
-                    <img 
-                        src={image} 
-                        alt={name} 
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = "/placeholder.jpg";
-                        }}
-                    />
-                )}
+                <img 
+                    src={image} 
+                    alt={name} 
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/placeholder.jpg";
+                    }}
+                />
                 
                 {/* Stock badge */}
                 {stock <= 0 && (

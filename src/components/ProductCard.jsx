@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
-function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock = 10, prodDescription = "" }) {
+function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock = 10, prodDescription = "", active = true }) {
     const { cartItems, setCartItems } = useCart();
     const { wishlistItems, toggleWishlistItem } = useWishlist();
 
@@ -12,6 +12,11 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
 
     // Check if product is in wishlist
     const isInWishlist = wishlistItems.some(item => item.id === id);
+
+    // If product is not active, don't render it
+    if (active === false) {
+        return null;
+    }
 
     // Function to handle wishlist toggle
     const handleWishlistToggle = (e) => {

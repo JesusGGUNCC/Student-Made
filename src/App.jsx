@@ -1,33 +1,15 @@
-// src/App.jsx - Modified with conditional header rendering
+// src/App.jsx - Modified with conditional header rendering for all user types
 import { useState, useEffect, useContext } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import './App.css'
 import Header from './components/Header'
-import AdminHeader from './components/AdminHeader' // We'll need to create this
+import AdminHeader from './components/AdminHeader'
+import VendorHeader from './components/VendorHeader' // Import the new VendorHeader
 import Footer from './components/Footer'
 import WelcomeModal from './components/WelcomeModal'
 import { CartProvider } from './context/CartContext'
 import { WishlistProvider } from './context/WishlistContext'
 import { AuthProvider, AuthContext } from './routes/AuthContent'
-
-// AdminHeader component definition
-const AdminHeader = () => {
-  return (
-    <nav className='px-4 sm:px-6 md:px-10 flex justify-between items-center h-[10vh] bg-gray-800 text-white'>
-      <div className='flex items-center'>
-        <a href="/admin" className="text-2xl font-bold">Admin Dashboard</a>
-      </div>
-      <div className='flex items-center gap-4'>
-        <a href="/" className="hover:text-gray-300">
-          Return to Site
-        </a>
-        <a href="/logout" className="bg-red-600 px-3 py-1 rounded hover:bg-red-700">
-          Logout
-        </a>
-      </div>
-    </nav>
-  );
-};
 
 // App wrapper component that can access context
 function AppContent() {
@@ -37,13 +19,19 @@ function AppContent() {
   // Check if we're on an admin page
   const isAdminPage = location.pathname.startsWith('/admin');
   
+  // Check if we're on a vendor page
+  const isVendorPage = location.pathname.startsWith('/vendor') || 
+                        location.pathname === '/vendor-profile';
+  
   return (
     <div className='min-h-screen flex flex-col'>
       <WelcomeModal />
       
-      {/* Conditional header rendering */}
+      {/* Conditional header rendering based on page and user role */}
       {isAdminPage && userRole === 'admin' ? (
         <AdminHeader />
+      ) : isVendorPage && (userRole === 'vendor' || userRole === 'admin') ? (
+        <VendorHeader />
       ) : (
         <Header />
       )}
