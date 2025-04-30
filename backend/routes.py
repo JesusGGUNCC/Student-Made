@@ -4,6 +4,18 @@ from flask import request, jsonify, session
 from datetime import datetime, timedelta
 import secrets
 import bcrypt
+import smtplib
+from email.message import EmailMessage
+import os 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+#Email setup
+SMTP_SERVER = 'smtp.gmail.com'
+SMTP_PORT = 587
+EMAIL_ADDRESS = os.getenv('EMAIL_USER')
+EMAIL_PASSWORD = os.getenv('EMAIL_PASS')
 
 @app.route("/signup", methods = ["POST"])
 def signup():
@@ -76,17 +88,42 @@ def forgot_password():
     
     user = User.query.filter_by(email=email).first()
     if not user:
-        return jsonify({"error" : "No account found with this email"}), 404
+        return jsonify({"message" : "If an account exists with this email, a reset link has been sent"}), 200
     
     token = secrets.token_urlsafe(32) #using secrets to generate a hexadecimal number
     user.reset_token = token
-    #Here i am setting i hour date expiry inside the db. So that the user have 1 hour to change their password 
+    #Here i am setting 15 mins date expiry inside the db. So that the user have 1 hour to change their password 
     user.reset_token_expiry = datetime.utcnow() + timedelta(minutes=15)
     db.session.commit()
 
-    print(f"Password reset link: http://localhost:5173/resetPassword?token={token}")
+    reset_link = f"http://localhost:5173/resetPassword?token={token}"
+
+    #print(f"Password reset link: http://localhost:5173/resetPassword?token={token}")
+
+ 
+    msg =  EmailMessage()
+    msg["Subject"] = "Password Reset Request"
+    msg["From"] = EMAIL_ADDRESS
+    msg['To'] = email
+    msg.set_content(
+            f"Please click the following link to reset your password: \n\n"
+            f"{reset_link}\n\n"
+            f"This link will expire in 15 minutes"
+        )
     
-    return jsonify({"message" : "Password Link Sent to your Email"}), 200
+    try:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as smtp:
+            smtp.starttls()
+            smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            smtp.send_message(msg)
+
+        return jsonify({"message" : "Password reset link has been sent to your email"}), 200
+    
+    except Exception as e:
+        print(f"Error sending email: {str(e)}")
+        return jsonify({"error": "Failed to send email. Please try again later"})
+    
+    
 
 @app.route('/resetPassword', methods=['POST'])
 def reset_password():

@@ -55,10 +55,10 @@ const ResetPassword = () => {
                 token,
                 password
             });
-            setMessage(response.data.message);
+            setMessage("Password reset successfullt! Redirecting to login...");
             setTimeout(() => navigate('/login'), 2000);
         } catch (err) {
-            setError(err.response?.data?.error || "An unexpected error occurred");
+            setError(err.response?.data?.error || "Failed to reset password");
         
         }
     };

@@ -6,26 +6,34 @@ const ForgotPassword = () => {
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage(''); //clearing message
         setError(''); //clearing message
+        setIsLoading(true)
+
+
         try {
             const response = await axios.post('http://localhost:5000/forgotPassword', { email });
             setMessage(response.data.message);
             setError('');
+            if (response.data.error) {
+                setError(response.data.error);
+            } else {
+                setMessage(response.data.message || "Reset link sent successfully");
+            }
             
         } catch (err) {
-            if (err.response && err.response.status === 404){
-                setError("No account found with this email address")
-            }else{
-                setError(err.response?.data?.error || "An unexpected error occurred ");
-
-            }
+            const errorMessage = err.response?.data?.error || err.message || "Failed to send reset link. Please try again later.";
+            setError(errorMessage)
             setMessage(''); //Clearing previous message 
             
+        } finally {
+            setIsLoading(false)
         }
+        
     };
 
     return (
@@ -58,9 +66,12 @@ const ForgotPassword = () => {
 
                     <button
                         type="submit"
-                        className="w-full bg-green-800 text-white py-2 rounded-md hover:bg-green-900 transition"
+                        disabled={isLoading}
+                        className={`w-full bg-green-800 text-white py-2 rounded-md hover:bg-green-900 transition ${
+                            isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                        }`}
                     >
-                        Send Reset Link
+                        {isLoading ? 'Sending...' : 'Send Reset Link'}
                     </button>
                     <p className="text-center text-sm text-gray-600">
                         Remember your password?{" "}
