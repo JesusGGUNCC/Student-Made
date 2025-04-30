@@ -18,6 +18,12 @@ function ListingsCard({
     // State to track if edit form is visible
     const [editTab, setEditTab] = useState(false);
 
+    // Define placeholderImage here, before any other references
+    const placeholderImage = "/placeholder.jpg";
+    
+    // Use a properly initialized image variable
+    const displayImage = image && image !== "" ? image : placeholderImage;
+
     // State to track product data with proper initialization
     const [editProduct, setEditProduct] = useState({
         name,
@@ -35,7 +41,7 @@ function ListingsCard({
             setEditProduct({
                 name,
                 price,
-                image,
+                image: image || '',  // Ensure image is never undefined
                 active,
                 stock,
                 description,
@@ -43,6 +49,19 @@ function ListingsCard({
             });
         }
     }, [name, price, image, active, stock, description, category, editTab]);
+
+    useEffect(() => {
+        console.log("Image URL when component renders:", image);
+        console.log("Display image being used:", displayImage);
+    }, [image, displayImage]);
+
+
+    const handleImageError = (e) => {
+        console.log("Image error occurred, current src:", e.target.src);
+        e.target.onerror = null; // Prevent infinite loop
+        e.target.src = placeholderImage;
+        console.log("Set src to placeholder:", placeholderImage);
+    };
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -97,9 +116,6 @@ function ListingsCard({
     // Default to 0 if it's NaN
     const normalizedStock = isNaN(stockValue) ? 0 : stockValue;
 
-    // Use a placeholder image if no image is available
-    const placeholderImage = "/placeholder.jpg";
-    const displayImage = image || placeholderImage;
 
     // Render edit form
     if (editTab) {
@@ -177,7 +193,7 @@ function ListingsCard({
                         {/* Image Upload Component */}
                         <ImageUploadComponent
                             onImageUploaded={handleImageUploaded}
-                            currentImage={editProduct.image}
+                            currentImage={editProduct.image || ''}
                         />
 
                         <div>
@@ -251,8 +267,10 @@ function ListingsCard({
                         alt={name}
                         className="h-full w-full object-cover"
                         onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = placeholderImage;
+                            if (e.target.src !== '/placeholder.jpg') {
+                                e.target.src = '/placeholder.jpg';
+                                e.target.onerror = null; // Prevent error loop
+                            }
                         }}
                     />
                 ) : (

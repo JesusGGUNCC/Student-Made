@@ -62,6 +62,10 @@ function VendorProfile() {
         try {
             setLoading(true);
             const response = await axios.get(`${API_URLS.vendorProducts}?username=${user.username}`);
+            const processedProducts = response.data.map(product => ({
+                ...product,
+                image: product.image || '' // Ensure image is never null/undefined
+            }));
             setListings(response.data);
             setError(null);
         } catch (err) {
@@ -97,9 +101,11 @@ function VendorProfile() {
 
     // Handle image upload for new product
     const handleImageUploaded = (imageUrl) => {
+        // Make sure to trim and validate the URL
+        const validatedUrl = imageUrl && imageUrl.trim() !== '' ? imageUrl.trim() : '';
         setNewListing({
             ...newListing,
-            image: imageUrl
+            image: validatedUrl
         });
     };
 
@@ -115,8 +121,10 @@ function VendorProfile() {
 
             // Add vendor username
             const productData = {
-                ...newListing,
-                vendor_username: user.username
+                ...updatedData,
+                vendor_username: user.username,
+                // Ensure image is a valid string, not null or undefined
+                image: updatedData.image || ''
             };
 
             // Send to backend
