@@ -66,6 +66,11 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
         }
     };
 
+    // Force the prodStock to be a number if it's a string
+    const stockValue = typeof prodStock === 'string' ? parseInt(prodStock, 10) : prodStock;
+    // Default to 0 if it's NaN
+    const normalizedStock = isNaN(stockValue) ? 0 : stockValue;
+
     return (
         <Link to={`/product/${id}`} className="block">
             <div className='flex flex-col w-full h-full rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300'>
@@ -88,19 +93,19 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                         aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill={isInWishlist ? "currentColor" : "none"} stroke="currentColor" strokeWidth={isInWishlist ? "0" : "2"}>
-                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                            <path fillRule="evenodd" d="M3.172 5.172a4.5 4.5 0 015.656 0L10 6.343l1.172-1.171a4.5 4.5 0 115.656 5.656L10 17.657l-6.828-6.829a4.5 4.5 0 010-5.656z" clipRule="evenodd" />
                         </svg>
                     </button>
 
                     {/* Stock badge */}
-                    {prodStock <= 0 && (
+                    {normalizedStock <= 0 && (
                         <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
                             SOLD OUT
                         </div>
                     )}
-                    {prodStock > 0 && prodStock <= 5 && (
+                    {normalizedStock > 0 && normalizedStock <= 5 && (
                         <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">
-                            LOW STOCK: {prodStock}
+                            LOW STOCK: {normalizedStock}
                         </div>
                     )}
                 </div>
@@ -123,9 +128,9 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
                             </p>
                             
                             {/* Only show stock info if product is in stock */}
-                            {prodStock > 0 && (
+                            {normalizedStock > 0 && (
                                 <p className="text-xs text-gray-600">
-                                    In stock: {prodStock} left
+                                    In stock: {normalizedStock} left
                                 </p>
                             )}
 
@@ -154,15 +159,15 @@ function ProductCard({ id, prodImg, prodName, prodRating, prodPrice, prodStock =
 
                         <button
                             onClick={handleAddToCart}
-                            disabled={prodStock <= 0 || isInCart}
-                            className={`px-3 py-1 rounded-full text-sm font-medium ${prodStock <= 0
+                            disabled={normalizedStock <= 0 || isInCart}
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${normalizedStock <= 0
                                     ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                     : isInCart
                                         ? 'bg-green-100 text-green-800'
                                         : 'bg-green-500 text-white hover:bg-green-600'
                                 }`}
                         >
-                            {prodStock <= 0
+                            {normalizedStock <= 0
                                 ? 'Sold Out'
                                 : isInCart
                                     ? 'In Cart'

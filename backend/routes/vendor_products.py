@@ -23,7 +23,7 @@ def get_vendor_products():
         if not vendor:
             return jsonify({"error": "Vendor profile not found"}), 404
         
-        # Get all products for this vendor
+        # Get all products for this vendor - include both active and inactive
         products = Product.query.filter_by(vendor_id=vendor.id).all()
         
         # Convert to JSON response
@@ -77,10 +77,10 @@ def add_vendor_product():
             price=float(data.get('price')),
             description=data.get('description'),
             category=data.get('category'),
-            image_url=data.get('image', None),
+            image_url=data.get('image') or None,
             rating=0,  # New products start with no rating
             stock=int(data.get('stock', 1)),
-            active=data.get('active', True),
+            active=data.get('active', True),  # Default to active=True if not provided
             vendor_id=vendor.id
         )
         
@@ -95,7 +95,7 @@ def add_vendor_product():
     except Exception as e:
         db.session.rollback()
         print(f"Error adding product: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 # 🛠️ Update a product
 @app.route("/api/vendor/product/<int:product_id>", methods=["PUT"])
@@ -231,6 +231,8 @@ def bulk_add_vendor_products():
             if not product_data.get('name') or 'price' not in product_data:
                 continue
             
+            active_status = product_data.get('active', True)  # Default to active if not specified
+            
             new_product = Product(
                 name=product_data.get('name'),
                 price=float(product_data.get('price')),
@@ -239,7 +241,7 @@ def bulk_add_vendor_products():
                 image_url=product_data.get('image', None),
                 rating=0,  # New products start with no rating
                 stock=int(product_data.get('stock', 1)),
-                active=product_data.get('active', True),
+                active=active_status,
                 vendor_id=vendor.id
             )
             

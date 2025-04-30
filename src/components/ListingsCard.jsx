@@ -137,6 +137,11 @@ function ListingsCard({
         }
     };
 
+    // Force the stock to be a number if it's a string
+    const stockValue = typeof stock === 'string' ? parseInt(stock, 10) : stock;
+    // Default to 0 if it's NaN
+    const normalizedStock = isNaN(stockValue) ? 0 : stockValue;
+
     // Conditional Rendering that shows form to edit changes for the listing component
     if (editTab) {
         return (
@@ -329,14 +334,14 @@ function ListingsCard({
                 />
                 
                 {/* Stock badge */}
-                {stock <= 0 && (
+                {normalizedStock <= 0 && (
                     <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
                         SOLD OUT
                     </div>
                 )}
-                {stock > 0 && stock <= 5 && (
+                {normalizedStock > 0 && normalizedStock <= 5 && (
                     <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">
-                        LOW STOCK: {stock}
+                        LOW STOCK: {normalizedStock}
                     </div>
                 )}
             </div>
@@ -356,7 +361,7 @@ function ListingsCard({
                     
                     <div className="flex items-center">
                         <span className="text-sm mr-3">
-                            {stock > 0 ? `In stock: ${stock}` : 'Out of stock'}
+                            {normalizedStock > 0 ? `In stock: ${normalizedStock}` : 'Out of stock'}
                         </span>
                         
                         {/* Status indicator */}

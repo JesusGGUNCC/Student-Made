@@ -1,4 +1,4 @@
-// src/routes/Products.jsx
+// src/routes/Products.jsx - Fixed version
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import ProductCard from '../components/ProductCard';
@@ -29,7 +29,7 @@ function Products() {
           data = response.data;
         }
         
-        // Filter out inactive products
+        // Filter out inactive products before setting the data
         const activeProducts = data.filter(product => product.active !== false);
         
         setProducts(activeProducts);
@@ -55,7 +55,7 @@ function Products() {
     const { searchTerm, category, priceRange, sortBy } = filters;
     
     // Always start with active products only
-    let filtered = [...products].filter(product => product.active !== false);
+    let filtered = [...products];
     
     // Apply search term filter
     if (searchTerm) {
@@ -106,8 +106,7 @@ function Products() {
   // Function to reset filters and show all products
   const resetFilters = () => {
     // Only show active products
-    const activeProducts = products.filter(product => product.active !== false);
-    setFilteredProducts(activeProducts);
+    setFilteredProducts(products);
   };
 
   return (
