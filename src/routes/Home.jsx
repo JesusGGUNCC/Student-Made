@@ -85,7 +85,7 @@ function Home() {
                 if (vendorsResponse.data && Array.isArray(vendorsResponse.data)) {
                     const vendorData = vendorsResponse.data.map(vendor => ({
                         name: vendor.name || `Vendor ${vendor.id}`,
-                        img: '/assets/person-example.jpg', // Default vendor image
+                        img: '/assets/vendor.png', // Default vendor image
                         id: vendor.id,
                         link: `/vendor/${vendor.id}`
                     }));
